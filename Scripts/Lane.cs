@@ -64,7 +64,13 @@ public partial class Lane : Node3D
 			_buttonBaseMesh.Position = new Vector3(0f, 0.04f, 0f);
 			AddChild(_buttonBaseMesh);
 		}
-		_buttonBaseMat = new StandardMaterial3D();
+		_buttonBaseMat = new StandardMaterial3D
+		{
+			AlbedoColor              = Colors.Gray,
+			EmissionEnabled          = true,
+			Emission                 = Colors.Gray,
+			EmissionEnergyMultiplier = 0.5f
+		};
 		_buttonBaseMesh.MaterialOverride = _buttonBaseMat;
 
 		// 3. Cap do botão — cilindro central mais alto (dá profundidade de botão)
@@ -82,7 +88,13 @@ public partial class Lane : Node3D
 			_buttonCapMesh.Position = new Vector3(0f, 0.17f, 0f);
 			AddChild(_buttonCapMesh);
 		}
-		_buttonCapMat = new StandardMaterial3D();
+		_buttonCapMat = new StandardMaterial3D
+		{
+			AlbedoColor              = Colors.White,
+			EmissionEnabled          = true,
+			Emission                 = Colors.White,
+			EmissionEnergyMultiplier = 1.0f
+		};
 		_buttonCapMesh.MaterialOverride = _buttonCapMat;
 
 		// 4. HitZone marker — barra brilhante na hitline
@@ -92,7 +104,13 @@ public partial class Lane : Node3D
 			_hitZoneMesh = new MeshInstance3D { Name = "HitZoneMarker" };
 			_hitZoneMesh.Mesh     = new BoxMesh { Size = new Vector3(1.85f, 0.06f, 0.28f) };
 			_hitZoneMesh.Position = new Vector3(0f, 0.03f, -0.8f);
-			_hitZoneMat = new StandardMaterial3D();
+			_hitZoneMat = new StandardMaterial3D
+			{
+				AlbedoColor              = Colors.Cyan,
+				EmissionEnabled          = true,
+				Emission                 = Colors.Cyan,
+				EmissionEnergyMultiplier = 2.0f
+			};
 			_hitZoneMesh.MaterialOverride = _hitZoneMat;
 			AddChild(_hitZoneMesh);
 		}
