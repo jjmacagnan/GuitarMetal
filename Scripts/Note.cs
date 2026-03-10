@@ -24,6 +24,7 @@ public partial class Note : Node3D
     private MeshInstance3D     _tailMesh;
     private StandardMaterial3D _tailMat;
     private float              _tailLen;
+    private float              _originalZ;        // Z inicial (spawn)
     private float _holdTimer   = 0f;
     private bool  _isBeingHeld = false;
 
@@ -36,6 +37,8 @@ public partial class Note : Node3D
     /// </summary>
     public void SetupVisuals(Color color)
     {
+        _originalZ = Position.Z;
+        
         // Cabeça (sempre presente)
         _headMesh = new MeshInstance3D { Name = "HeadMesh" };
         _headMesh.Mesh = new BoxMesh { Size = new Vector3(1.4f, 0.3f, 1.4f) };
@@ -59,7 +62,8 @@ public partial class Note : Node3D
                 AlbedoColor              = color * 0.65f,
                 EmissionEnabled          = true,
                 Emission                 = color * 0.4f,
-                EmissionEnergyMultiplier = 0.6f
+                EmissionEnergyMultiplier = 0.6f,
+                Transparency             = BaseMaterial3D.TransparencyEnum.Alpha
             };
             _tailMesh.MaterialOverride = _tailMat;
             // Cauda atrás da cabeça (direção -Z = de onde a nota veio)
@@ -107,7 +111,10 @@ public partial class Note : Node3D
         if (_tailMat != null)
         {
             float pulse = (Mathf.Sin(_holdTimer * Mathf.Pi * 5f) + 1f) * 0.5f;
-            _tailMat.EmissionEnergyMultiplier = Mathf.Lerp(0.4f, 2.0f, pulse);
+            _tailMat.EmissionEnergyMultiplier = Mathf.Lerp(0.6f, 2.5f, pulse);
+            // Fade suave na cauda conforme é consumida
+            float alphaFade = Mathf.Clamp(1f - _holdTimer / Duration * 0.3f, 0.5f, 1f);
+            _tailMat.AlbedoColor = _tailMat.AlbedoColor with { A = alphaFade };
         }
 
         if (_holdTimer >= Duration)
@@ -120,10 +127,18 @@ public partial class Note : Node3D
     private void UpdateTailVisual()
     {
         if (_tailMesh == null || Duration <= 0f) return;
-        float t = Mathf.Clamp(1f - _holdTimer / Duration, 0f, 1f);
-        _tailMesh.Scale    = new Vector3(1f, 1f, t);
-        // Mantém a face traseira fixa em -_tailLen; consome pela frente (hitline)
-        _tailMesh.Position = new Vector3(0f, 0f, -_tailLen + _tailLen * t * 0.5f);
+        
+        // Progress do hold: 0 = início, 1 = fim
+        float progress = Mathf.Clamp(_holdTimer / Duration, 0f, 1f);
+        
+        // Cauda encolhe conforme hold progride
+        float remainingProgress = 1f - progress;
+        _tailMesh.Scale = new Vector3(1f, 1f, remainingProgress);
+        
+        // Cauda vai de spawn (-_tailLen atrás) até hitline conforme consumida
+        // Head fica fixo em Z=0, cauda atrás dele
+        float consumedDistance = _tailLen * progress;
+        _tailMesh.Position = new Vector3(0f, 0f, -((_tailLen - consumedDistance) * 0.5f));
     }
 
     public bool IsInHitWindow()

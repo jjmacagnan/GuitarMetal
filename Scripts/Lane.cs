@@ -232,23 +232,25 @@ public partial class Lane : Node3D
 
 		if (isHolding)
 		{
-			// Pulso lento de hold (já implementado antes)
-			float pulse = (Mathf.Sin((float)Time.GetTicksMsec() * 0.001f * Mathf.Pi * 4f) + 1f) * 0.5f;
-			if (_hitZoneMat   != null) _hitZoneMat.EmissionEnergyMultiplier   = Mathf.Lerp(2.5f, 7.0f, pulse);
-			if (_buttonCapMat != null) _buttonCapMat.EmissionEnergyMultiplier = Mathf.Lerp(1.5f, 5.0f, pulse);
+			// Pulso lento e profundo de hold (visual contínuo forte)
+			float holdPulse = (Mathf.Sin((float)Time.GetTicksMsec() * 0.001f * Mathf.Pi * 3f) + 1f) * 0.5f;
+			if (_hitZoneMat   != null) _hitZoneMat.EmissionEnergyMultiplier   = Mathf.Lerp(3.5f, 9.0f, holdPulse);
+			if (_buttonCapMat != null) _buttonCapMat.EmissionEnergyMultiplier = Mathf.Lerp(2.5f, 7.0f, holdPulse);
+			if (_buttonBaseMat != null) _buttonBaseMat.EmissionEnergyMultiplier = Mathf.Lerp(1.5f, 4.0f, holdPulse);
 		}
 		else if (noteInWindow)
 		{
 			// Pulso rápido: "momento para clicar"
-			float pulse = (Mathf.Sin((float)Time.GetTicksMsec() * 0.001f * Mathf.Pi * 8f) + 1f) * 0.5f;
-			if (_hitZoneMat   != null) _hitZoneMat.EmissionEnergyMultiplier   = Mathf.Lerp(3.0f, 8.0f, pulse);
-			if (_buttonCapMat != null) _buttonCapMat.EmissionEnergyMultiplier = Mathf.Lerp(2.0f, 6.0f, pulse);
+			float readyPulse = (Mathf.Sin((float)Time.GetTicksMsec() * 0.001f * Mathf.Pi * 8f) + 1f) * 0.5f;
+			if (_hitZoneMat   != null) _hitZoneMat.EmissionEnergyMultiplier   = Mathf.Lerp(3.0f, 8.0f, readyPulse);
+			if (_buttonCapMat != null) _buttonCapMat.EmissionEnergyMultiplier = Mathf.Lerp(2.0f, 6.0f, readyPulse);
 		}
 		else if (_wasHolding || _wasNoteInWindow)
 		{
 			// Restaura valores padrão definidos em ApplyColor
 			if (_hitZoneMat   != null) _hitZoneMat.EmissionEnergyMultiplier   = 3.0f;
 			if (_buttonCapMat != null) _buttonCapMat.EmissionEnergyMultiplier = 2.0f;
+			if (_buttonBaseMat != null) _buttonBaseMat.EmissionEnergyMultiplier = 1.2f;
 		}
 
 		_wasHolding      = isHolding;
@@ -268,7 +270,11 @@ public partial class Lane : Node3D
 		note.NoteMissed += (n) =>
 		{
 			_activeNotes.Remove(n);
-			if (_currentHoldNote == n) _currentHoldNote = null;
+			if (_currentHoldNote == n)
+			{
+				_currentHoldNote = null;
+				ShowReleasePenalty();
+			}
 			EmitSignal(SignalName.NoteMissedInLane, LaneIndex);
 		};
 
@@ -276,6 +282,23 @@ public partial class Lane : Node3D
 		{
 			if (_currentHoldNote == n) _currentHoldNote = null;
 			EmitSignal(SignalName.HoldCompleteInLane, LaneIndex, n);
+		};
+	}
+
+	private void ShowReleasePenalty()
+	{
+		if (_hitZoneMat == null) return;
+		var originalMat = _hitZoneMat.EmissionEnergyMultiplier;
+		_hitZoneMat.Emission = Colors.Red * 2f;
+		_hitZoneMat.EmissionEnergyMultiplier = 8f;
+		var t = GetTree().CreateTimer(0.15f);
+		t.Timeout += () =>
+		{
+			if (_hitZoneMat != null)
+			{
+				_hitZoneMat.Emission = LaneColor * 2.5f;
+				_hitZoneMat.EmissionEnergyMultiplier = originalMat;
+			}
 		};
 	}
 }
