@@ -19,7 +19,38 @@ public static class ChartImporter
 	private static readonly string[] TrackPriority =
 		{ "ExpertSingle", "HardSingle", "MediumSingle", "EasySingle" };
 
-	public static SongChart Import(string chartPath)
+	/// <summary>
+	/// Escaneia um .chart e retorna quais dificuldades estão presentes
+	/// (ex: ["ExpertSingle", "HardSingle"]) sem parsear notas.
+	/// </summary>
+	public static List<string> ScanDifficulties(string chartPath)
+	{
+		var result = new List<string>();
+		if (!FileAccess.FileExists(chartPath)) return result;
+
+		using var file = FileAccess.Open(chartPath, FileAccess.ModeFlags.Read);
+		string[] lines = file.GetAsText().Split('\n');
+
+		var found = new HashSet<string>();
+		foreach (string raw in lines)
+		{
+			string line = raw.Trim();
+			if (line.StartsWith("[") && line.EndsWith("]"))
+				found.Add(line[1..^1]);
+		}
+
+		// Retorna na ordem de prioridade (Expert primeiro)
+		foreach (string t in TrackPriority)
+			if (found.Contains(t)) result.Add(t);
+
+		return result;
+	}
+
+	/// <summary>
+	/// Importa um .chart. Se <paramref name="difficulty"/> for informado,
+	/// usa essa track; caso contrário pega a mais alta disponível.
+	/// </summary>
+	public static SongChart Import(string chartPath, string difficulty = null)
 	{
 		if (!FileAccess.FileExists(chartPath))
 		{
@@ -51,8 +82,10 @@ public static class ChartImporter
 		chart.BPM         = GetBpmAtTick(0, bpmMap);
 		chart.StartOffset = offset;
 
-		// ── Segunda passagem: notas (pega a dificuldade mais alta disponível) ─
-		string targetTrack = FindBestTrack(lines);
+		// ── Segunda passagem: notas ─────────────────────────────────────────
+		string targetTrack = difficulty != null && FindAllTracks(lines).Contains(difficulty)
+			? difficulty
+			: FindBestTrack(lines);
 		if (targetTrack == null)
 		{
 			GD.PushWarning("[ChartImporter] Nenhuma track de notas encontrada.");
@@ -144,7 +177,7 @@ public static class ChartImporter
 
 	// ── Helpers ────────────────────────────────────────────────────────────
 
-	private static string FindBestTrack(string[] lines)
+	private static HashSet<string> FindAllTracks(string[] lines)
 	{
 		var found = new HashSet<string>();
 		foreach (string raw in lines)
@@ -153,6 +186,12 @@ public static class ChartImporter
 			if (line.StartsWith("[") && line.EndsWith("]"))
 				found.Add(line[1..^1]);
 		}
+		return found;
+	}
+
+	private static string FindBestTrack(string[] lines)
+	{
+		var found = FindAllTracks(lines);
 		foreach (string t in TrackPriority)
 			if (found.Contains(t)) return t;
 		return null;

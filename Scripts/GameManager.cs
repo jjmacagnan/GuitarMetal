@@ -1,4 +1,5 @@
 using Godot;
+using System;
 using System.Collections.Generic;
 
 /// <summary>
@@ -32,6 +33,10 @@ public partial class GameManager : Node3D
 	private int    _multiplier   = 1;
 	private int    _resolvedNotes;
 	private bool   _songEnded;
+	private bool   _paused;
+
+	// ── Pause UI ───────────────────────────────────────────────────────
+	private Control _pauseOverlay;
 
 	private double        _songTime;
 	private int           _nextNoteIndex;
@@ -155,6 +160,7 @@ public partial class GameManager : Node3D
 		}
 
 		InitParticlePool();
+		BuildPauseOverlay();
 		UpdateHUD();
 	}
 
@@ -178,10 +184,100 @@ public partial class GameManager : Node3D
 		}
 	}
 
+	// ── Pause ──────────────────────────────────────────────────────────────
+	public override void _UnhandledInput(InputEvent @event)
+	{
+		if (@event.IsActionPressed("ui_cancel")) // ESC
+		{
+			if (_songEnded) return;
+			TogglePause();
+			GetViewport().SetInputAsHandled();
+		}
+	}
+
+	private void TogglePause()
+	{
+		_paused = !_paused;
+		GetTree().Paused = _paused;
+
+		if (_paused)
+		{
+			if (_audio != null) _audio.StreamPaused = true;
+			_pauseOverlay?.Show();
+		}
+		else
+		{
+			if (_audio != null) _audio.StreamPaused = false;
+			_pauseOverlay?.Hide();
+		}
+	}
+
+	private void ResumeGame()  => TogglePause();
+	private void RestartSong() { GetTree().Paused = false; GetTree().ReloadCurrentScene(); }
+	private void QuitToMenu()  { GetTree().Paused = false; GetTree().ChangeSceneToFile("res://Scenes/SongSelect.tscn"); }
+
+	private void BuildPauseOverlay()
+	{
+		var hud = GetNodeOrNull<CanvasLayer>("HUD");
+		if (hud == null) return;
+
+		_pauseOverlay = new Control();
+		_pauseOverlay.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+		_pauseOverlay.ProcessMode = ProcessModeEnum.Always; // funciona mesmo com tree pausada
+
+		// Fundo escuro semi-transparente
+		var bg = new ColorRect();
+		bg.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+		bg.Color = new Color(0f, 0f, 0f, 0.75f);
+		_pauseOverlay.AddChild(bg);
+
+		// Container central
+		var vbox = new VBoxContainer();
+		vbox.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.Center);
+		vbox.OffsetLeft   = -160;
+		vbox.OffsetRight  =  160;
+		vbox.OffsetTop    = -130;
+		vbox.OffsetBottom =  130;
+		vbox.AddThemeConstantOverride("separation", 16);
+		vbox.Alignment = BoxContainer.AlignmentMode.Center;
+
+		// Título
+		var title = new Label { Text = "PAUSADO", HorizontalAlignment = HorizontalAlignment.Center };
+		title.AddThemeFontSizeOverride("font_size", 42);
+		title.AddThemeColorOverride("font_color", new Color(0.2f, 0.9f, 1f));
+		vbox.AddChild(title);
+
+		// Botões
+		var btnResume  = MakePauseButton("Continuar",       ResumeGame);
+		var btnRestart = MakePauseButton("Recomeçar",       RestartSong);
+		var btnQuit    = MakePauseButton("Sair para Menu",  QuitToMenu);
+
+		vbox.AddChild(btnResume);
+		vbox.AddChild(btnRestart);
+		vbox.AddChild(btnQuit);
+
+		_pauseOverlay.AddChild(vbox);
+		_pauseOverlay.Hide();
+		hud.AddChild(_pauseOverlay);
+	}
+
+	private static Button MakePauseButton(string text, Action callback)
+	{
+		var btn = new Button
+		{
+			Text              = text,
+			CustomMinimumSize = new Vector2(280, 52),
+			ProcessMode       = ProcessModeEnum.Always,
+		};
+		btn.AddThemeFontSizeOverride("font_size", 22);
+		btn.Pressed += callback;
+		return btn;
+	}
+
 	// ── _Process ───────────────────────────────────────────────────────────
 	public override void _Process(double delta)
 	{
-		if (_songEnded) return;
+		if (_songEnded || _paused) return;
 
 		// Ancora _songTime ao clock real do áudio compensando a latência de saída.
 		// GetPlaybackPosition() retorna a posição no stream (não o que o jogador ouve).

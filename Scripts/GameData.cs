@@ -20,6 +20,12 @@ public static class GameData
     public static AudioStream LoadedStream     { get; set; } = null;
     public static float       LoadedBPM        { get; set; } = 128f;
 
+    // ── Dificuldade ──────────────────────────────────────────────────────
+    /// <summary>Track selecionada (ex: "ExpertSingle"). null = auto (maior disponível).</summary>
+    public static string       SelectedDifficulty    { get; set; } = null;
+    /// <summary>Dificuldades encontradas no .chart (preenchido por SongSelectMenu).</summary>
+    public static List<string> AvailableDifficulties { get; set; } = null;
+
     // Notas pré-geradas pelo LoadingScreen, consumidas pelo GameManager
     public static List<NoteData> PreparedNotes { get; set; } = null;
 
@@ -54,9 +60,11 @@ public static class GameData
     public static void Reset()
     {
         ResetRun();
-        SelectedSongPath = "";
-        SelectedSongName = "";
-        LoadedStream     = null;
-        PreparedNotes    = null;
+        SelectedSongPath      = "";
+        SelectedSongName      = "";
+        LoadedStream          = null;
+        PreparedNotes         = null;
+        SelectedDifficulty    = null;
+        AvailableDifficulties = null;
     }
 }

@@ -145,7 +145,7 @@ public partial class LoadingScreen : Control
 	{
 		if (!FileAccess.FileExists(chartPath)) return false;
 
-		var imported = ChartImporter.Import(chartPath);
+		var imported = ChartImporter.Import(chartPath, GameData.SelectedDifficulty);
 		if (imported == null) return false;
 
 		_bpm         = imported.BPM;

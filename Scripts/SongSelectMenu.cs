@@ -55,13 +55,34 @@ public partial class SongSelectMenu : Control
 
     private void OnSongSelected(string path, string name)
     {
-        GameData.SelectedSongPath = path;
-        GameData.SelectedSongName = name;
-        GameData.LoadedBPM        = 128f; // BPM fixo; pode ser extendido com metadados
-        GameData.LoadedStream     = null;
-        GameData.PreparedNotes    = null;
+        GameData.SelectedSongPath      = path;
+        GameData.SelectedSongName      = name;
+        GameData.LoadedBPM             = 128f;
+        GameData.LoadedStream          = null;
+        GameData.PreparedNotes         = null;
+        GameData.SelectedDifficulty    = null;
+        GameData.AvailableDifficulties = null;
 
-        GetTree().ChangeSceneToFile("res://Scenes/Loading.tscn");
+        // Verifica se existe .chart com múltiplas dificuldades
+        int lastDot  = path.LastIndexOf('.');
+        string basePath  = lastDot >= 0 ? path[..lastDot] : path;
+        string chartPath = basePath + ".chart";
+
+        var difficulties = ChartImporter.ScanDifficulties(chartPath);
+
+        if (difficulties.Count > 1)
+        {
+            // Múltiplas dificuldades → tela de seleção
+            GameData.AvailableDifficulties = difficulties;
+            GetTree().ChangeSceneToFile("res://Scenes/DifficultySelect.tscn");
+        }
+        else
+        {
+            // 0 ou 1 dificuldade → pula direto para Loading
+            if (difficulties.Count == 1)
+                GameData.SelectedDifficulty = difficulties[0];
+            GetTree().ChangeSceneToFile("res://Scenes/Loading.tscn");
+        }
     }
 
     // ── Utilitários ────────────────────────────────────────────────────────

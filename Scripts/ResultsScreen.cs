@@ -28,7 +28,7 @@ public partial class ResultsScreen : Control
         var playAgain = GetNodeOrNull<Button>("VBox/PlayAgainButton");
         var menu      = GetNodeOrNull<Button>("VBox/MenuButton");
 
-        if (playAgain != null) playAgain.Pressed += () => GetTree().ChangeSceneToFile("res://Scenes/Game.tscn");
+        if (playAgain != null) playAgain.Pressed += () => GetTree().ChangeSceneToFile("res://Scenes/SongSelect.tscn");
         else GD.PushError("[ResultsScreen] PlayAgainButton não encontrado!");
 
         if (menu != null) menu.Pressed += () => GetTree().ChangeSceneToFile("res://Scenes/MainMenu.tscn");
