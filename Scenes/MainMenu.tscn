@@ -39,7 +39,7 @@ theme_override_constants/separation = 24
 layout_mode = 2
 theme_override_colors/font_color = Color(0.2, 0.9, 1, 1)
 theme_override_font_sizes/font_size = 52
-text = "GUITAR METAL"
+text = "GUITAR HERO 3D"
 horizontal_alignment = 1
 
 [node name="SubtitleLabel" type="Label" parent="VBox" unique_id=859855028]
