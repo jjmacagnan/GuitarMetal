@@ -23,6 +23,16 @@ public partial class SongSelectMenu : Control
         PopulateSongs();
     }
 
+    public override void _UnhandledInput(InputEvent @event)
+    {
+        // B (ui_cancel) → volta ao menu principal
+        if (@event.IsActionPressed("ui_cancel"))
+        {
+            GetTree().ChangeSceneToFile("res://Scenes/MainMenu.tscn");
+            GetViewport().SetInputAsHandled();
+        }
+    }
+
     private void PopulateSongs()
     {
         if (_songList == null) return;
@@ -36,6 +46,7 @@ public partial class SongSelectMenu : Control
             return;
         }
 
+        Button firstBtn = null;
         foreach (var (path, name) in songs)
         {
             string capturedPath = path;
@@ -44,13 +55,18 @@ public partial class SongSelectMenu : Control
             var btn = new Button
             {
                 Text              = capturedName,
-                CustomMinimumSize = new Vector2(0, 64)
+                CustomMinimumSize = new Vector2(0, 64),
+                FocusMode         = Control.FocusModeEnum.All,
             };
             btn.AddThemeFontSizeOverride("font_size", 22);
             btn.Pressed += () => OnSongSelected(capturedPath, capturedName);
 
             _songList.AddChild(btn);
+            firstBtn ??= btn;
         }
+
+        // Foca o primeiro botão para navegação por controle
+        firstBtn?.CallDeferred(Control.MethodName.GrabFocus);
     }
 
     private void OnSongSelected(string path, string name)

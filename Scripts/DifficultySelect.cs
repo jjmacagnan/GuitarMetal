@@ -37,6 +37,7 @@ public partial class DifficultySelect : Control
 
 		var available = GameData.AvailableDifficulties ?? new List<string>();
 
+		Button firstBtn = null;
 		foreach (string diff in DisplayOrder)
 		{
 			if (!available.Contains(diff)) continue;
@@ -46,12 +47,26 @@ public partial class DifficultySelect : Control
 			var btn = BuildDifficultyButton(info.Label, info.Stars, info.Color);
 			btn.Pressed += () => OnDifficultySelected(captured);
 			grid.AddChild(btn);
+			firstBtn ??= btn;
 		}
+
+		// Foca a primeira dificuldade disponível
+		firstBtn?.CallDeferred(Control.MethodName.GrabFocus);
 
 		// Botão Voltar
 		GetNodeOrNull<Button>("VBox/BackButton")
 			?.Connect("pressed", Callable.From(
 				() => GetTree().ChangeSceneToFile("res://Scenes/SongSelect.tscn")));
+	}
+
+	public override void _UnhandledInput(InputEvent @event)
+	{
+		// B (ui_cancel) → volta à seleção de música
+		if (@event.IsActionPressed("ui_cancel"))
+		{
+			GetTree().ChangeSceneToFile("res://Scenes/SongSelect.tscn");
+			GetViewport().SetInputAsHandled();
+		}
 	}
 
 	private void OnDifficultySelected(string difficulty)

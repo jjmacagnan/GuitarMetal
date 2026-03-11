@@ -37,6 +37,7 @@ public partial class GameManager : Node3D
 
 	// ── Pause UI ───────────────────────────────────────────────────────
 	private Control _pauseOverlay;
+	private Button  _pauseResumeButton;
 
 	private double        _songTime;
 	private int           _nextNoteIndex;
@@ -235,6 +236,8 @@ public partial class GameManager : Node3D
 		{
 			if (_audio != null) _audio.StreamPaused = true;
 			_pauseOverlay?.Show();
+			// Foca o botão Continuar para navegação por controle
+			_pauseResumeButton?.CallDeferred(Control.MethodName.GrabFocus);
 		}
 		else
 		{
@@ -287,6 +290,8 @@ public partial class GameManager : Node3D
 		vbox.AddChild(btnRestart);
 		vbox.AddChild(btnQuit);
 
+		_pauseResumeButton = btnResume;
+
 		_pauseOverlay.AddChild(vbox);
 		_pauseOverlay.Hide();
 		hud.AddChild(_pauseOverlay);
@@ -299,6 +304,7 @@ public partial class GameManager : Node3D
 			Text              = text,
 			CustomMinimumSize = new Vector2(280, 52),
 			ProcessMode       = ProcessModeEnum.Always,
+			FocusMode         = Control.FocusModeEnum.All,
 		};
 		btn.AddThemeFontSizeOverride("font_size", 22);
 		btn.Pressed += callback;
