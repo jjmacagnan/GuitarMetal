@@ -378,9 +378,9 @@ public partial class GameManager : Node3D
 		string label;
 		Color  color;
 
-		// Thresholds com 20% de margem antes e depois da hitline
-		if      (dist < 0.48f) { baseScore = 100; label = "PERFECT!"; color = Colors.Cyan;   }
-		else if (dist < 1.20f) { baseScore =  75; label = "GREAT";    color = Colors.Yellow; }
+		// PERFECT <25ms | GREAT <60ms | GOOD <90ms  (a Speed=12u/s)
+		if      (dist < 0.30f) { baseScore = 100; label = "PERFECT!"; color = Colors.Cyan;   }
+		else if (dist < 0.72f) { baseScore =  75; label = "GREAT";    color = Colors.Yellow; }
 		else                   { baseScore =  50; label = "GOOD";     color = Colors.White;  }
 
 		_score += baseScore * _multiplier;

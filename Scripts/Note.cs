@@ -17,8 +17,8 @@ public partial class Note : Node3D
 
     // Hitline em Z=0, notas vêm de Z negativo em direção a Z=0
     public const float HitLineZ  = 0f;
-    public const float HitWindow = 1.5f;
-    private const float MissZ    = 2f;   // passou da hitline → miss
+    public const float HitWindow = 1.08f;  // 90ms a Speed=12
+    private const float MissZ    = 1.13f;  // HitWindow + 0.05 → sem zona morta
 
     private MeshInstance3D     _headMesh;
     private MeshInstance3D     _tailMesh;

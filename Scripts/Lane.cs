@@ -191,7 +191,7 @@ public partial class Lane : Node3D
 		foreach (var n in _activeNotes)
 		{
 			if (!n.IsInHitWindow()) continue;
-			float d = Mathf.Abs(n.Position.Z - Note.HitLineZ);
+			float d = Mathf.Abs(n.GlobalPosition.Z - Note.HitLineZ);
 			if (d < closestDist) { closestDist = d; closest = n; }
 		}
 
