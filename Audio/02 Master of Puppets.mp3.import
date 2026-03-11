@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://fr80ncbnxb6k"
+path="res://.godot/imported/02 Master of Puppets.mp3-6f559f3f0d9bfcec4f51ce7f0f17c1ef.mp3str"
+
+[deps]
+
+source_file="res://Audio/02 Master of Puppets.mp3"
+dest_files=["res://.godot/imported/02 Master of Puppets.mp3-6f559f3f0d9bfcec4f51ce7f0f17c1ef.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

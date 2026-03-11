@@ -1,22 +1,26 @@
-[gd_scene format=3 uid="uid://main_menu_scene"]
+[gd_scene format=3 uid="uid://dgjxmw75do5j0"]
 
-[ext_resource type="Script" path="res://Scripts/MainMenu.cs" id="1_menu"]
+[ext_resource type="Script" uid="uid://cd8x528aq5vbt" path="res://Scripts/MainMenu.cs" id="1_menu"]
 
-[node name="MainMenu" type="Control"]
+[node name="MainMenu" type="Control" unique_id=2048519644]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 script = ExtResource("1_menu")
 
-[node name="Background" type="ColorRect" parent="."]
+[node name="Background" type="ColorRect" parent="." unique_id=592113897]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 color = Color(0.04, 0.04, 0.12, 1)
 
-[node name="VBox" type="VBoxContainer" parent="."]
+[node name="VBox" type="VBoxContainer" parent="." unique_id=648607070]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -27,39 +31,40 @@ offset_left = -200.0
 offset_top = -180.0
 offset_right = 200.0
 offset_bottom = 180.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_constants/separation = 24
 
-[node name="TitleLabel" type="Label" parent="VBox"]
+[node name="TitleLabel" type="Label" parent="VBox" unique_id=1579215632]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.2, 0.9, 1, 1)
 theme_override_font_sizes/font_size = 52
 text = "GUITAR HERO 3D"
 horizontal_alignment = 1
 
-[node name="SubtitleLabel" type="Label" parent="VBox"]
+[node name="SubtitleLabel" type="Label" parent="VBox" unique_id=859855028]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.6, 0.6, 0.8, 1)
 theme_override_font_sizes/font_size = 20
-text = "Master of Puppets  —  BPM 128"
 horizontal_alignment = 1
 
-[node name="Spacer" type="Control" parent="VBox"]
-layout_mode = 2
+[node name="Spacer" type="Control" parent="VBox" unique_id=1122386010]
 custom_minimum_size = Vector2(0, 20)
-
-[node name="PlayButton" type="Button" parent="VBox"]
 layout_mode = 2
+
+[node name="PlayButton" type="Button" parent="VBox" unique_id=117704175]
 custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
 theme_override_font_sizes/font_size = 30
 text = "JOGAR"
 
-[node name="QuitButton" type="Button" parent="VBox"]
-layout_mode = 2
+[node name="QuitButton" type="Button" parent="VBox" unique_id=2022277961]
 custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
 theme_override_font_sizes/font_size = 22
 text = "Sair"
 
-[node name="ControlsLabel" type="Label" parent="."]
+[node name="ControlsLabel" type="Label" parent="." unique_id=84117427]
 layout_mode = 1
 anchors_preset = 12
 anchor_top = 1.0
@@ -67,6 +72,8 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 offset_top = -36.0
 offset_bottom = -8.0
+grow_horizontal = 2
+grow_vertical = 0
 theme_override_colors/font_color = Color(0.5, 0.5, 0.6, 1)
 theme_override_font_sizes/font_size = 16
 text = "[A] Verde   [S] Vermelho   [D] Amarelo   [F] Azul   [Space] Laranja"

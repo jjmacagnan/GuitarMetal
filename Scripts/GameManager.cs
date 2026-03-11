@@ -21,6 +21,7 @@ public partial class GameManager : Node3D
 	private Label             _comboLabel;
 	private Label             _multLabel;
 	private Label             _feedbackLabel;
+	private Label             _accuracyLabel;
 
 	// ── Pool de partículas (uma por lane, reutilizável) ───────────────────
 	private GpuParticles3D[] _hitParticles;
@@ -68,6 +69,7 @@ public partial class GameManager : Node3D
 		_comboLabel    = GetNodeOrNull<Label>("HUD/ComboLabel");
 		_multLabel     = GetNodeOrNull<Label>("HUD/MultLabel");
 		_feedbackLabel = GetNodeOrNull<Label>("HUD/FeedbackLabel");
+		_accuracyLabel = GetNodeOrNull<Label>("HUD/AccuracyLabel");
 
 		// Inicializa lanes
 		_lanes = new Lane[5];
@@ -368,5 +370,24 @@ public partial class GameManager : Node3D
 		if (_scoreLabel != null) _scoreLabel.Text = $"Score: {_score:N0}";
 		if (_comboLabel != null) _comboLabel.Text = _combo > 1 ? $"x{_combo} Combo" : "";
 		if (_multLabel  != null) _multLabel.Text  = _multiplier > 1 ? $"{_multiplier}x" : "";
+
+		if (_accuracyLabel != null)
+		{
+			if (_resolvedNotes > 0)
+			{
+				float acc = (float)GameData.NotesHit / _resolvedNotes * 100f;
+				_accuracyLabel.Text = $"{acc:F1}%";
+				Color col = acc >= 95f ? Colors.Cyan
+						  : acc >= 85f ? Colors.LightGreen
+						  : acc >= 70f ? Colors.Yellow
+						  : acc >= 55f ? new Color(1f, 0.55f, 0f)
+						  :              Colors.Red;
+				_accuracyLabel.AddThemeColorOverride("font_color", col);
+			}
+			else
+			{
+				_accuracyLabel.Text = "--%";
+			}
+		}
 	}
 }

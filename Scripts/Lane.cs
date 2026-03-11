@@ -11,18 +11,15 @@ public partial class Lane : Node3D
 	private MeshInstance3D     _trackMesh;
 	private StandardMaterial3D _trackMat;
 
-	// ── Botão: base larga (disco) + cap elevado ────────────────────────────
-	private MeshInstance3D     _buttonBaseMesh;   // disco externo, plano
+	// ── Botão: anel externo (base) + dome (cap estilo GH) ─────────────────
+	private MeshInstance3D     _buttonBaseMesh;   // anel externo, plano
 	private StandardMaterial3D _buttonBaseMat;
-	private MeshInstance3D     _buttonCapMesh;    // cilindro central, mais alto
+	private MeshInstance3D     _buttonCapMesh;    // dome esférico central
 	private StandardMaterial3D _buttonCapMat;
 
 	// ── Indicador de hitline ───────────────────────────────────────────────
 	private MeshInstance3D     _hitZoneMesh;
 	private StandardMaterial3D _hitZoneMat;
-
-	// ── Label 3D com tecla acima do botão ─────────────────────────────────
-	private Label3D _keyLabel;
 
 	// ── Notas ──────────────────────────────────────────────────────────────
 	private readonly List<Note> _activeNotes     = new();
@@ -73,19 +70,19 @@ public partial class Lane : Node3D
 		};
 		_buttonBaseMesh.MaterialOverride = _buttonBaseMat;
 
-		// 3. Cap do botão — cilindro central mais alto (dá profundidade de botão)
+		// 3. Cap do botão — dome esférico estilo Guitar Hero
 		_buttonCapMesh = GetNodeOrNull<MeshInstance3D>("ButtonCap");
 		if (_buttonCapMesh == null)
 		{
 			_buttonCapMesh = new MeshInstance3D { Name = "ButtonCap" };
-			_buttonCapMesh.Mesh = new CylinderMesh
+			_buttonCapMesh.Mesh = new SphereMesh
 			{
-				TopRadius    = 0.60f,
-				BottomRadius = 0.62f,
-				Height       = 0.26f,
-				RadialSegments = 24
+				Radius         = 0.52f,
+				Height         = 1.04f,
+				RadialSegments = 24,
+				Rings          = 12
 			};
-			_buttonCapMesh.Position = new Vector3(0f, 0.17f, 0f);
+			_buttonCapMesh.Position = new Vector3(0f, 0.10f, 0f);
 			AddChild(_buttonCapMesh);
 		}
 		_buttonCapMat = new StandardMaterial3D
@@ -115,23 +112,6 @@ public partial class Lane : Node3D
 			AddChild(_hitZoneMesh);
 		}
 		else { _hitZoneMat = _hitZoneMesh.MaterialOverride as StandardMaterial3D; }
-
-		// 5. Label 3D com a tecla acima do botão
-		_keyLabel = GetNodeOrNull<Label3D>("KeyLabel");
-		if (_keyLabel == null)
-		{
-			_keyLabel = new Label3D
-			{
-				Name                = "KeyLabel",
-				PixelSize           = 0.012f,
-				FontSize            = 52,
-				Position            = new Vector3(0f, 0.78f, 0f),
-				Billboard           = BaseMaterial3D.BillboardModeEnum.Enabled,
-				HorizontalAlignment = HorizontalAlignment.Center,
-				OutlineSize         = 6,
-			};
-			AddChild(_keyLabel);
-		}
 
 		ApplyColor();
 	}
@@ -171,11 +151,6 @@ public partial class Lane : Node3D
 			_hitZoneMat.EmissionEnergyMultiplier = 3.0f;
 		}
 
-		if (_keyLabel != null)
-		{
-			_keyLabel.Text     = InputKey == Key.Space ? "SPC" : InputKey.ToString();
-			_keyLabel.Modulate = LaneColor;
-		}
 	}
 
 	public override void _Input(InputEvent @event)
@@ -193,36 +168,36 @@ public partial class Lane : Node3D
 
 	private void OnKeyPressed()
 	{
-		// Animação de pressionamento: botão "desce" e diminui de tamanho
+		// Animação de pressionamento: dome achata (squish) e desce
 		if (_buttonCapMesh != null)
 		{
-			var originalPos = _buttonCapMesh.Position;
+			var originalPos   = _buttonCapMesh.Position;
 			var originalScale = _buttonCapMesh.Scale;
-			
-			// Tween: desce 0.04 unidades e encolhe para 0.95x
+			var pressedScale  = new Vector3(originalScale.X * 1.08f, originalScale.Y * 0.60f, originalScale.Z * 1.08f);
+
 			var tw = CreateTween();
 			tw.SetTrans(Tween.TransitionType.Quad);
-			tw.SetEase(Tween.EaseType.InOut);
-			tw.TweenProperty(_buttonCapMesh, "position:y", originalPos.Y - 0.04f, 0.08f);
-			tw.Parallel().TweenProperty(_buttonCapMesh, "scale", originalScale * 0.95f, 0.08f);
-			
-			// Pulso de brilho forte
+			tw.SetEase(Tween.EaseType.Out);
+			tw.TweenProperty(_buttonCapMesh, "scale", pressedScale, 0.07f);
+			tw.Parallel().TweenProperty(_buttonCapMesh, "position:y", originalPos.Y - 0.06f, 0.07f);
+
+			// Brilho de press
 			if (_buttonCapMat != null)
 			{
-				_buttonCapMat.Emission = LaneColor * 5f;
-				_buttonCapMat.EmissionEnergyMultiplier = 4.0f;
+				_buttonCapMat.Emission = LaneColor * 6f;
+				_buttonCapMat.EmissionEnergyMultiplier = 5.0f;
 			}
-			
-			// Volta ao normal
-			var timer = GetTree().CreateTimer(0.15f);
+
+			// Volta ao normal com bounce suave
+			var timer = GetTree().CreateTimer(0.12f);
 			timer.Timeout += () =>
 			{
 				if (_buttonCapMesh == null || !IsInstanceValid(_buttonCapMesh)) return;
 				var restoreTw = CreateTween();
-				restoreTw.SetTrans(Tween.TransitionType.Quad);
+				restoreTw.SetTrans(Tween.TransitionType.Elastic);
 				restoreTw.SetEase(Tween.EaseType.Out);
-				restoreTw.TweenProperty(_buttonCapMesh, "position:y", originalPos.Y, 0.1f);
-				restoreTw.Parallel().TweenProperty(_buttonCapMesh, "scale", originalScale, 0.1f);
+				restoreTw.TweenProperty(_buttonCapMesh, "scale", originalScale, 0.25f);
+				restoreTw.Parallel().TweenProperty(_buttonCapMesh, "position:y", originalPos.Y, 0.15f);
 			};
 		}
 		

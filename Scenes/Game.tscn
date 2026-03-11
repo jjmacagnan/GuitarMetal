@@ -28,7 +28,7 @@ size = Vector3(14, 0.1, 60)
 script = ExtResource("1_gm")
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=1629892860]
-transform = Transform3D(1, 0, 0, 0, 0.93969, -0.34202, 0, 0.34202, 0.93969, 0, 5, 10)
+transform = Transform3D(1, 0, 0, 0, 0.8443027, 0.5358108, 0, -0.5358108, 0.8443027, 0, 4, 6)
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1200540501]
 environment = SubResource("Env_1")
@@ -79,6 +79,15 @@ offset_right = 320.0
 offset_bottom = 56.0
 theme_override_font_sizes/font_size = 28
 text = "Score: 0"
+
+[node name="AccuracyLabel" type="Label" parent="HUD" unique_id=1631639200]
+offset_left = 16.0
+offset_top = 60.0
+offset_right = 200.0
+offset_bottom = 96.0
+theme_override_colors/font_color = Color(0, 1, 1, 1)
+theme_override_font_sizes/font_size = 24
+text = "--%"
 
 [node name="ComboLabel" type="Label" parent="HUD" unique_id=2042107301]
 anchors_preset = 8
