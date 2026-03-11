@@ -133,12 +133,55 @@ public partial class LoadingScreen : Control
 	private void ReadChartMetadata()
 	{
 		string audioPath = GameData.SelectedSongPath;
-		int lastDot = audioPath.LastIndexOf('.');
+		int    lastDot   = audioPath.LastIndexOf('.');
 		string basePath  = lastDot >= 0 ? audioPath[..lastDot] : audioPath;
+		string dir       = audioPath[..(audioPath.LastIndexOf('/') + 1)];
 
-		// Prioridade: .chart (Clone Hero) → .json → procedural
-		if (TryLoadDotChart(basePath + ".chart")) return;
+		// Prioridade de chart:
+		//   1. [nome_do_audio].chart  (ex: song.chart ao lado de song.ogg)
+		//   2. notes.chart            (formato Clone Hero em pasta)
+		//   3. notes.mid              (formato Clone Hero MIDI em pasta)
+		//   4. [nome_do_audio].json   (formato JSON legado)
+		//   5. procedural
+		if (TryLoadDotChart(basePath + ".chart"))   return;
+		if (TryLoadDotChart(dir + "notes.chart"))   return;
+		if (TryLoadMidi(dir + "notes.mid"))         return;
 		TryLoadJson(basePath + ".json");
+	}
+
+	private bool TryLoadMidi(string midiPath)
+	{
+		if (!FileAccess.FileExists(midiPath)) return false;
+
+		// Lê metadados do song.ini na mesma pasta (se existir)
+		string dir     = midiPath[..(midiPath.LastIndexOf('/') + 1)];
+		string iniPath = dir + "song.ini";
+
+		float audioOffsetSec = 0f;
+		if (FileAccess.FileExists(iniPath))
+		{
+			var info = SongIniReader.Read(iniPath);
+			audioOffsetSec = info.DelayMs / 1000f;
+
+			string displayName = SongIniReader.BuildDisplayName(info, GameData.SelectedSongName);
+			if (!string.IsNullOrEmpty(displayName))
+				GameData.SelectedSongName = displayName;
+		}
+
+		var imported = MidiImporter.Import(midiPath, audioOffsetSec, GameData.SelectedDifficulty);
+		if (imported == null) return false;
+
+		_bpm         = imported.BPM;
+		_startOffset = imported.StartOffset;
+
+		if (imported.Notes.Count > 0)
+		{
+			_chartNotes = new List<NoteData>();
+			foreach (var nd in imported.Notes) _chartNotes.Add(nd);
+			GD.Print($"[Loading] MIDI carregado: {_chartNotes.Count} notas, BPM={_bpm:F1}");
+		}
+
+		return true;
 	}
 
 	private bool TryLoadDotChart(string chartPath)
