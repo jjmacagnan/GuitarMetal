@@ -133,23 +133,42 @@ public partial class LoadingScreen : Control
 	private void ReadChartMetadata()
 	{
 		string audioPath = GameData.SelectedSongPath;
-		int lastDot = audioPath.LastIndexOf('.');
+		int    lastDot   = audioPath.LastIndexOf('.');
 		string basePath  = lastDot >= 0 ? audioPath[..lastDot] : audioPath;
+		string dir       = audioPath[..(audioPath.LastIndexOf('/') + 1)];
 
-		// Prioridade: .chart (Clone Hero) → .json → procedural
-		if (TryLoadDotChart(basePath + ".chart")) return;
+		// Lê song.ini da pasta (se existir) para nome e delay de áudio
+		float iniDelayMs = 0f;
+		string iniPath = dir + "song.ini";
+		if (FileAccess.FileExists(iniPath))
+		{
+			var info = SongIniReader.Read(iniPath);
+			iniDelayMs = info.DelayMs;
+			string displayName = SongIniReader.BuildDisplayName(info, GameData.SelectedSongName);
+			if (!string.IsNullOrEmpty(displayName))
+				GameData.SelectedSongName = displayName;
+		}
+
+		// Prioridade: notes.chart (Clone Hero / Enchor) → [nome].chart → .json → procedural
+		if (TryLoadDotChart(dir + "notes.chart", iniDelayMs)) return;
+		if (TryLoadDotChart(basePath + ".chart", iniDelayMs)) return;
 		TryLoadJson(basePath + ".json");
 	}
 
-	private bool TryLoadDotChart(string chartPath)
+	private bool TryLoadDotChart(string chartPath, float iniDelayMs = 0f)
 	{
 		if (!FileAccess.FileExists(chartPath)) return false;
 
 		var imported = ChartImporter.Import(chartPath, GameData.SelectedDifficulty);
 		if (imported == null) return false;
 
-		_bpm         = imported.BPM;
-		_startOffset = imported.StartOffset;
+		_bpm = imported.BPM;
+
+		// Offset: usa o do .chart se não-zero; caso contrário aplica delay do song.ini
+		_startOffset = imported.StartOffset != 0f
+			? imported.StartOffset
+			: iniDelayMs / 1000f;
+
 		if (!string.IsNullOrEmpty(imported.SongName))
 			GameData.SelectedSongName = imported.SongName;
 
@@ -157,7 +176,7 @@ public partial class LoadingScreen : Control
 		{
 			_chartNotes = new List<NoteData>();
 			foreach (var nd in imported.Notes) _chartNotes.Add(nd);
-			GD.Print($"[Loading] .chart carregado: {_chartNotes.Count} notas, BPM={_bpm}");
+			GD.Print($"[Loading] .chart carregado: {_chartNotes.Count} notas, BPM={_bpm}, offset={_startOffset:F3}s");
 		}
 		return true;
 	}
