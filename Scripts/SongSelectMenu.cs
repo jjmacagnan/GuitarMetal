@@ -3,10 +3,7 @@ using System.Collections.Generic;
 
 /// <summary>
 /// Tela de seleção de música.
-///
-/// Escaneia res://Audio/ de duas formas:
-///   1. Arquivos de áudio diretamente na raiz (formato antigo)
-///   2. Subpastas contendo song.ini + notes.mid/notes.chart (formato Clone Hero)
+/// Escaneia res://Audio/ em busca de arquivos de áudio e exibe um botão por música.
 /// </summary>
 public partial class SongSelectMenu : Control
 {
@@ -14,10 +11,6 @@ public partial class SongSelectMenu : Control
     private Label         _previewLabel;
 
     private static readonly string[] AudioExtensions = { ".ogg", ".mp3", ".wav" };
-
-    // Áudios possíveis dentro de uma pasta Clone Hero, em ordem de prioridade
-    private static readonly string[] FolderAudioCandidates =
-        { "song.ogg", "guitar.ogg", "backing.ogg", "song.mp3", "guitar.mp3", "song.wav" };
 
     public override void _Ready()
     {
@@ -32,6 +25,7 @@ public partial class SongSelectMenu : Control
 
     public override void _UnhandledInput(InputEvent @event)
     {
+        // B (ui_cancel) → volta ao menu principal
         if (@event.IsActionPressed("ui_cancel"))
         {
             GetTree().ChangeSceneToFile("res://Scenes/MainMenu.tscn");
@@ -39,13 +33,11 @@ public partial class SongSelectMenu : Control
         }
     }
 
-    // ── População da lista ─────────────────────────────────────────────────
-
     private void PopulateSongs()
     {
         if (_songList == null) return;
 
-        var songs = FindAllSongs("res://Audio/");
+        var songs = FindAudioFiles("res://Audio/");
 
         if (songs.Count == 0)
         {
@@ -73,14 +65,13 @@ public partial class SongSelectMenu : Control
             firstBtn ??= btn;
         }
 
+        // Foca o primeiro botão para navegação por controle
         firstBtn?.CallDeferred(Control.MethodName.GrabFocus);
     }
 
-    // ── Seleção de música ──────────────────────────────────────────────────
-
-    private void OnSongSelected(string audioPath, string name)
+    private void OnSongSelected(string path, string name)
     {
-        GameData.SelectedSongPath      = audioPath;
+        GameData.SelectedSongPath      = path;
         GameData.SelectedSongName      = name;
         GameData.LoadedBPM             = 128f;
         GameData.LoadedStream          = null;
@@ -88,135 +79,67 @@ public partial class SongSelectMenu : Control
         GameData.SelectedDifficulty    = null;
         GameData.AvailableDifficulties = null;
 
-        // Deriva a pasta e caminhos de chart possíveis
-        string dir      = GetDir(audioPath);
-        string basePath = StripExtension(audioPath);
+        // Verifica se existe .chart com múltiplas dificuldades
+        int lastDot  = path.LastIndexOf('.');
+        string basePath  = lastDot >= 0 ? path[..lastDot] : path;
+        string chartPath = basePath + ".chart";
 
-        List<string> difficulties = ScanAvailableDifficulties(basePath, dir);
+        var difficulties = ChartImporter.ScanDifficulties(chartPath);
 
         if (difficulties.Count > 1)
         {
+            // Múltiplas dificuldades → tela de seleção
             GameData.AvailableDifficulties = difficulties;
             GetTree().ChangeSceneToFile("res://Scenes/DifficultySelect.tscn");
         }
         else
         {
+            // 0 ou 1 dificuldade → pula direto para Loading
             if (difficulties.Count == 1)
                 GameData.SelectedDifficulty = difficulties[0];
             GetTree().ChangeSceneToFile("res://Scenes/Loading.tscn");
         }
     }
 
-    /// <summary>
-    /// Tenta encontrar dificuldades em: [basePath].chart → dir/notes.chart → dir/notes.mid
-    /// </summary>
-    private static List<string> ScanAvailableDifficulties(string basePath, string dir)
-    {
-        // 1. Mesmo nome que o áudio: "song.chart" ao lado de "song.ogg"
-        if (FileAccess.FileExists(basePath + ".chart"))
-            return ChartImporter.ScanDifficulties(basePath + ".chart");
+    // ── Utilitários ────────────────────────────────────────────────────────
 
-        // 2. Clone Hero: notes.chart na mesma pasta
-        string notesChart = dir + "notes.chart";
-        if (FileAccess.FileExists(notesChart))
-            return ChartImporter.ScanDifficulties(notesChart);
-
-        // 3. Clone Hero: notes.mid na mesma pasta
-        string notesMid = dir + "notes.mid";
-        if (FileAccess.FileExists(notesMid))
-            return MidiImporter.ScanDifficulties(notesMid);
-
-        return new List<string>();
-    }
-
-    // ── Escaneamento de arquivos ───────────────────────────────────────────
-
-    private static List<(string audioPath, string displayName)> FindAllSongs(string baseDir)
+    private static List<(string path, string name)> FindAudioFiles(string dir)
     {
         var result = new List<(string, string)>();
-        var access = DirAccess.Open(baseDir);
+        var access = DirAccess.Open(dir);
         if (access == null) return result;
 
         access.ListDirBegin();
         string entry = access.GetNext();
         while (entry != "")
         {
-            string fullPath = baseDir.TrimEnd('/') + "/" + entry;
-
-            if (access.CurrentIsDir())
+            if (!access.CurrentIsDir())
             {
-                // Tenta ler como pasta no formato Clone Hero
-                var folderSong = TryScanCloneHeroFolder(fullPath + "/");
-                if (folderSong.HasValue) result.Add(folderSong.Value);
-            }
-            else
-            {
-                // Arquivo de áudio direto na raiz
                 foreach (var ext in AudioExtensions)
                 {
                     if (entry.ToLower().EndsWith(ext))
                     {
-                        result.Add((fullPath, CleanName(entry)));
+                        string fullPath  = dir.TrimEnd('/') + "/" + entry;
+                        string cleanName = CleanName(entry);
+                        result.Add((fullPath, cleanName));
                         break;
                     }
                 }
             }
-
             entry = access.GetNext();
         }
         access.ListDirEnd();
         return result;
     }
 
-    /// <summary>
-    /// Verifica se uma subpasta contém um chart válido (notes.mid, notes.chart ou áudio) e retorna
-    /// o caminho de áudio + nome para exibição. Retorna null se a pasta não for reconhecida.
-    /// </summary>
-    private static (string audioPath, string displayName)? TryScanCloneHeroFolder(string dir)
-    {
-        // Precisa ter pelo menos um arquivo de áudio reconhecido
-        string audioPath = null;
-        foreach (var candidate in FolderAudioCandidates)
-        {
-            if (FileAccess.FileExists(dir + candidate)) { audioPath = dir + candidate; break; }
-        }
-        if (audioPath == null) return null;
-
-        // Nome padrão = nome da pasta
-        string folderName = dir.TrimEnd('/');
-        folderName = folderName[(folderName.LastIndexOf('/') + 1)..];
-
-        // Sobrescreve com song.ini se disponível
-        string iniPath = dir + "song.ini";
-        if (FileAccess.FileExists(iniPath))
-        {
-            var info = SongIniReader.Read(iniPath);
-            string fromIni = SongIniReader.BuildDisplayName(info, folderName);
-            if (!string.IsNullOrEmpty(fromIni)) folderName = fromIni;
-        }
-
-        return (audioPath, folderName);
-    }
-
-    // ── Utilitários ────────────────────────────────────────────────────────
-
-    private static string GetDir(string path)
-    {
-        int slash = path.LastIndexOf('/');
-        return slash >= 0 ? path[..(slash + 1)] : "";
-    }
-
-    private static string StripExtension(string path)
-    {
-        int dot = path.LastIndexOf('.');
-        return dot >= 0 ? path[..dot] : path;
-    }
-
     /// <summary>Remove extensão e numeração inicial: "02 Master of Puppets.ogg" → "Master of Puppets"</summary>
     private static string CleanName(string fileName)
     {
-        int dot  = fileName.LastIndexOf('.');
+        // Remove extensão
+        int dot = fileName.LastIndexOf('.');
         string name = dot >= 0 ? fileName[..dot] : fileName;
+
+        // Remove prefixo numérico tipo "02 " ou "02. "
         int i = 0;
         while (i < name.Length && (char.IsDigit(name[i]) || name[i] == '.' || name[i] == ' '))
             i++;
