@@ -47,11 +47,27 @@ public partial class LoadingScreen : Control
 				break;
 
 			case State.LoadAudio:
-				var stream = GD.Load<AudioStream>(GameData.SelectedSongPath);
+				string audioPath = GameData.SelectedSongPath;
+				bool fileExists  = FileAccess.FileExists(audioPath);
+				bool hasImport   = FileAccess.FileExists(audioPath + ".import");
+
+				if (!fileExists)
+				{
+					GD.PushError($"[Loading] Arquivo de áudio não existe: {audioPath}");
+				}
+				else if (!hasImport)
+				{
+					GD.PushWarning($"[Loading] Áudio existe mas não foi importado pelo Godot (falta .import): {audioPath}");
+					GD.PushWarning("[Loading] Abra o editor Godot para que o arquivo seja importado automaticamente.");
+				}
+
+				var stream = GD.Load<AudioStream>(audioPath);
 				GameData.LoadedStream = stream;
 
-				if (stream == null)
-					GD.PushError($"[Loading] Áudio não encontrado: {GameData.SelectedSongPath}");
+				if (stream == null && fileExists)
+					GD.PushError($"[Loading] Falha ao carregar áudio (formato não suportado? .opus não é aceito — use .ogg/.mp3/.wav): {audioPath}");
+				else if (stream != null)
+					GD.Print($"[Loading] Áudio carregado: {audioPath} ({stream.GetLength():F1}s)");
 
 				SetStatus("Lendo metadados da música...", 30);
 				_state = State.ReadMetadata;

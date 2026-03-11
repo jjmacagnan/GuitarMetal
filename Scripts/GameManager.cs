@@ -390,7 +390,6 @@ public partial class GameManager : Node3D
 	// ── Eventos de acerto ──────────────────────────────────────────────────
 	private void OnNoteHit(int lane, Note note)
 	{
-		// Apenas notas tap chegam aqui (hold heads são filtradas na Lane)
 		_combo++;
 		_multiplier = _combo switch { >= 30 => 8, >= 20 => 4, >= 10 => 2, _ => 1 };
 
@@ -407,7 +406,10 @@ public partial class GameManager : Node3D
 
 		_score += baseScore * _multiplier;
 		GameData.NotesHit++;
-		_resolvedNotes++;
+
+		// Hold notes: não conta como resolvida agora — será resolvida no HoldComplete ou miss
+		if (!note.IsLong)
+			_resolvedNotes++;
 
 		ShowFeedback(label, color);
 		SpawnFireEffect(lane);
@@ -514,6 +516,16 @@ public partial class GameManager : Node3D
 	{
 		if (_songEnded) return;
 		_songEnded = true;
+
+		// Conta notas não-resolvidas como miss para que a acurácia final seja consistente.
+		// Isso acontece quando o áudio termina antes de todas as notas passarem pela hitline.
+		int unresolved = _totalNotes - _resolvedNotes;
+		if (unresolved > 0)
+		{
+			GameData.NotesMissed += unresolved;
+			_resolvedNotes = _totalNotes;
+			GD.Print($"[GameManager] {unresolved} notas não-resolvidas contadas como miss");
+		}
 
 		GameData.Score = _score;
 		GD.Print($"[GameManager] Fim! Score={_score}, Acc={GameData.Accuracy:F1}%, Grade={GameData.Grade}");
