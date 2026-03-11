@@ -6,8 +6,12 @@ using System.Collections.Generic;
 ///
 /// Escaneia res://Audio/ de duas formas:
 ///   1. Subpastas no formato Clone Hero / Enchor:
-///         AudioName/song.opus  +  notes.chart  +  song.ini  (+ album.jpg opcional)
+///         AudioName/song.ogg (ou guitar.ogg / backing.ogg / song.mp3 / song.wav)
+///         + notes.chart  +  song.ini  (+ album.jpg opcional)
 ///   2. Arquivos de áudio soltos na raiz (formato legado)
+///
+/// Nota: Godot 4 não importa .opus — converta para .ogg com:
+///   ffmpeg -i song.opus song.ogg
 /// </summary>
 public partial class SongSelectMenu : Control
 {
@@ -15,12 +19,13 @@ public partial class SongSelectMenu : Control
     private Label         _previewLabel;
 
     // Extensões de áudio reconhecidas (em ordem de prioridade dentro de uma pasta)
+    // .opus NÃO está na lista — Godot 4 não suporta o formato Opus.
     private static readonly string[] FolderAudioCandidates =
-        { "song.opus", "song.ogg", "guitar.ogg", "backing.ogg", "song.mp3", "song.wav" };
+        { "song.ogg", "guitar.ogg", "backing.ogg", "song.mp3", "song.wav" };
 
     // Extensões para varredura de arquivos soltos
     private static readonly string[] LooseAudioExtensions =
-        { ".ogg", ".mp3", ".wav", ".opus" };
+        { ".ogg", ".mp3", ".wav" };
 
     public override void _Ready()
     {
@@ -153,16 +158,64 @@ public partial class SongSelectMenu : Control
     }
 
     /// <summary>
-    /// Verifica se a pasta tem pelo menos um arquivo de áudio reconhecido.
+    /// Verifica se a pasta tem pelo menos um arquivo de áudio reconhecido E importado.
+    /// Prioridade: candidatos padrão com .import → qualquer áudio com .import → candidatos sem .import.
     /// Retorna o caminho do áudio e o nome para exibição (via song.ini ou nome da pasta).
     /// </summary>
     private static (string audioPath, string displayName)? TryScanSongFolder(string dir)
     {
         string audioPath = null;
+
+        // 1ª passagem: candidato padrão que já foi importado pelo Godot (.import presente)
         foreach (var candidate in FolderAudioCandidates)
         {
-            if (FileAccess.FileExists(dir + candidate)) { audioPath = dir + candidate; break; }
+            string p = dir + candidate;
+            if (FileAccess.FileExists(p) && FileAccess.FileExists(p + ".import"))
+            {
+                audioPath = p;
+                break;
+            }
         }
+
+        // 2ª passagem: qualquer arquivo de áudio na pasta que possua .import
+        if (audioPath == null)
+        {
+            var access = DirAccess.Open(dir);
+            if (access != null)
+            {
+                access.ListDirBegin();
+                string entry = access.GetNext();
+                while (entry != "" && audioPath == null)
+                {
+                    if (!access.CurrentIsDir())
+                    {
+                        string lower = entry.ToLower();
+                        foreach (var ext in LooseAudioExtensions)
+                        {
+                            if (lower.EndsWith(ext) && FileAccess.FileExists(dir + entry + ".import"))
+                            {
+                                audioPath = dir + entry;
+                                break;
+                            }
+                        }
+                    }
+                    entry = access.GetNext();
+                }
+                access.ListDirEnd();
+            }
+        }
+
+        // 3ª passagem (fallback): candidato padrão mesmo sem .import
+        // (permite carregar se o Godot importar em tempo de execução ou no próximo scan)
+        if (audioPath == null)
+        {
+            foreach (var candidate in FolderAudioCandidates)
+            {
+                string p = dir + candidate;
+                if (FileAccess.FileExists(p)) { audioPath = p; break; }
+            }
+        }
+
         if (audioPath == null) return null;
 
         // Nome padrão = nome da pasta
