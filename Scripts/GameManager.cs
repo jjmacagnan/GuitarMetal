@@ -260,7 +260,16 @@ public partial class GameManager : Node3D
 	}
 
 	private void ResumeGame()  => TogglePause();
-	private void RestartSong() { GetTree().Paused = false; GetTree().ReloadCurrentScene(); }
+	private void RestartSong()
+	{
+		GetTree().Paused = false;
+		// Se há múltiplas dificuldades disponíveis, deixa o jogador escolher novamente.
+		// Com apenas uma dificuldade (ou nenhuma), reinicia direto.
+		if (GameData.AvailableDifficulties != null && GameData.AvailableDifficulties.Count > 1)
+			GetTree().ChangeSceneToFile("res://Scenes/DifficultySelect.tscn");
+		else
+			GetTree().ReloadCurrentScene();
+	}
 	private void QuitToMenu()  { GetTree().Paused = false; GetTree().ChangeSceneToFile("res://Scenes/SongSelect.tscn"); }
 
 	private void BuildPauseOverlay()
