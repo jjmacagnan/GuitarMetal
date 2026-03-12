@@ -293,9 +293,19 @@ public partial class Lane : Node3D
 
 		onHit = (n) =>
 		{
-			note.NoteHit          -= onHit;
-			note.NoteMissed       -= onMissed;
-			note.HoldComplete     -= onHoldComplete;
+			// Sempre desinscreve o próprio handler de hit (já disparou).
+			note.NoteHit -= onHit;
+
+			// Para notas normais (tap): desinscreve tudo — não haverá mais sinais.
+			// Para hold notes: mantém NoteMissed e HoldComplete ativos, pois o hold
+			// ainda precisa ser segurado até o fim (ou pode ser solto antes → miss).
+			// REGRESSÃO C1: desinscr-ever HoldComplete aqui fazia holds nunca serem contados.
+			if (!n.IsLong)
+			{
+				note.NoteMissed   -= onMissed;
+				note.HoldComplete -= onHoldComplete;
+			}
+
 			_activeNotes.Remove(n);
 			if (n.IsLong) _currentHoldNote = n;
 		};
