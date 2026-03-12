@@ -17,9 +17,14 @@ public partial class Note : Node3D
 
     // Hitline em Z=0, notas vêm de Z negativo em direção a Z=0
     public const float HitLineZ  = 0f;
-    // Janela calculada para NoteSpeed=36:  90ms × 36 = 3.24 unidades
-    public const float HitWindow = 3.24f;
-    private const float MissZ    = 3.30f;  // HitWindow + margem → sem zona morta
+
+    // Janela de acerto (ajustada dinamicamente pela velocidade da nota)
+    // As janelas são definidas em tempo (segundos): PERFECT=25ms, GREAT=60ms, GOOD=90ms
+    // Convertidas para unidades de espaço: window_units = time_seconds * Speed (unidades/s)
+    public float GetPerfectWindow() => 0.025f * Speed;
+    public float GetGreatWindow()   => 0.06f * Speed;
+    public float GetGoodWindow()    => 0.09f * Speed;
+    private float GetMissZ() => HitLineZ + GetGoodWindow() + 0.06f;
 
     private MeshInstance3D     _headMesh;
     private MeshInstance3D     _tailMesh;
@@ -91,7 +96,7 @@ public partial class Note : Node3D
         float idealZ = -(float)(BeatTime - GameData.SongTime) * Speed;
         Position = new Vector3(Position.X, Position.Y, idealZ);
 
-        if (Position.Z > MissZ)
+        if (Position.Z > GetMissZ())
         {
             Missed = true;
             EmitSignal(SignalName.NoteMissed, this);
@@ -152,9 +157,12 @@ public partial class Note : Node3D
     }
 
     public bool IsInHitWindow()
-        => !WasHit && !Missed
-           && Position.Z >= HitLineZ - HitWindow
-           && Position.Z <= HitLineZ + HitWindow;
+    {
+        float hw = GetGoodWindow();
+        return !WasHit && !Missed
+               && Position.Z >= HitLineZ - hw
+               && Position.Z <= HitLineZ + hw;
+    }
 
     public void Hit()
     {

@@ -411,11 +411,14 @@ public partial class GameManager : Node3D
 		string label;
 		Color  color;
 
-		// PERFECT <25ms | GREAT <60ms | GOOD <90ms  (a NoteSpeed=36)
-		// 25ms × 36 = 0.90u | 60ms × 36 = 2.16u | 90ms × 36 = 3.24u (HitWindow)
-		if      (dist < 0.90f) { baseScore = 100; label = "PERFECT!"; color = Colors.Cyan;   }
-		else if (dist < 2.16f) { baseScore =  75; label = "GREAT";    color = Colors.Yellow; }
-		else                   { baseScore =  50; label = "GOOD";     color = Colors.White;  }
+		// Timing windows (in seconds): PERFECT=25ms, GREAT=60ms, GOOD=90ms
+		float perfectThreshold = 0.025f * note.Speed;
+		float greatThreshold   = 0.06f  * note.Speed;
+		// goodThreshold is implicit; anything <= goodThreshold is GOOD
+
+		if      (dist < perfectThreshold) { baseScore = 100; label = "PERFECT!"; color = Colors.Cyan;   }
+		else if (dist < greatThreshold)   { baseScore =  75; label = "GREAT";    color = Colors.Yellow; }
+		else                               { baseScore =  50; label = "GOOD";     color = Colors.White;  }
 
 		_score += baseScore * _multiplier;
 		GameData.NotesHit++;
