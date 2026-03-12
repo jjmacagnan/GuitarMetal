@@ -108,6 +108,20 @@ public partial class Note : Node3D
     {
         if (_holdResolved) return;
 
+        _holdTimer += delta;
+
+        // FIX M1: Verifica conclusão ANTES de checar release.
+        // Se o timer atingir Duration no mesmo frame em que o jogador solta a tecla,
+        // o hold é contado como completo e não como miss (ordem justa).
+        if (_holdTimer >= Duration)
+        {
+            _holdResolved = true;
+            UpdateTailVisual();
+            EmitSignal(SignalName.HoldComplete, this);
+            QueueFree();
+            return;
+        }
+
         if (!_isBeingHeld)
         {
             // Tecla solta antes do fim — miss
@@ -118,7 +132,6 @@ public partial class Note : Node3D
             return;
         }
 
-        _holdTimer += delta;
         UpdateTailVisual();
 
         // Pulso de emissão no tail enquanto segurado
@@ -129,13 +142,6 @@ public partial class Note : Node3D
             // Fade suave na cauda conforme é consumida
             float alphaFade = Mathf.Clamp(1f - _holdTimer / Duration * 0.3f, 0.5f, 1f);
             _tailMat.AlbedoColor = _tailMat.AlbedoColor with { A = alphaFade };
-        }
-
-        if (_holdTimer >= Duration)
-        {
-            _holdResolved = true;
-            EmitSignal(SignalName.HoldComplete, this);
-            QueueFree();
         }
     }
 
@@ -188,6 +194,8 @@ public partial class Note : Node3D
 
     public void ReleaseHold()
     {
-        if (IsLong && WasHit) _isBeingHeld = false;
+        // FIX H4: Guarda contra _holdResolved para evitar transição de estado indevida
+        // caso ReleaseHold seja chamado após o hold já ter sido completado ou perdido.
+        if (IsLong && WasHit && !_holdResolved) _isBeingHeld = false;
     }
 }

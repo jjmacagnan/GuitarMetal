@@ -162,9 +162,17 @@ public partial class Lane : Node3D
 		if (!InputMap.HasAction(action)) return;
 
 		if (@event.IsActionPressed(action))
+		{
 			OnKeyPressed();
+			// FIX H1: Marca o input como tratado para evitar que o mesmo keypress
+			// seja processado por outras lanes (input bleeding entre pistas).
+			GetViewport().SetInputAsHandled();
+		}
 		else if (@event.IsActionReleased(action))
+		{
 			OnKeyReleased();
+			GetViewport().SetInputAsHandled();
+		}
 	}
 
 	private void OnKeyPressed()
@@ -277,14 +285,26 @@ public partial class Lane : Node3D
 	{
 		_activeNotes.Add(note);
 
-		note.NoteHit += (n) =>
+		// FIX C1: Usa delegates nomeados para poder desinscrever após o primeiro disparo,
+		// evitando memory leak causado por lambdas que nunca eram removidas dos eventos.
+		Note.NoteHitEventHandler      onHit         = null;
+		Note.NoteMissedEventHandler   onMissed      = null;
+		Note.HoldCompleteEventHandler onHoldComplete = null;
+
+		onHit = (n) =>
 		{
+			note.NoteHit          -= onHit;
+			note.NoteMissed       -= onMissed;
+			note.HoldComplete     -= onHoldComplete;
 			_activeNotes.Remove(n);
 			if (n.IsLong) _currentHoldNote = n;
 		};
 
-		note.NoteMissed += (n) =>
+		onMissed = (n) =>
 		{
+			note.NoteHit          -= onHit;
+			note.NoteMissed       -= onMissed;
+			note.HoldComplete     -= onHoldComplete;
 			_activeNotes.Remove(n);
 			if (_currentHoldNote == n)
 			{
@@ -294,11 +314,18 @@ public partial class Lane : Node3D
 			EmitSignal(SignalName.NoteMissedInLane, LaneIndex);
 		};
 
-		note.HoldComplete += (n) =>
+		onHoldComplete = (n) =>
 		{
+			note.NoteHit          -= onHit;
+			note.NoteMissed       -= onMissed;
+			note.HoldComplete     -= onHoldComplete;
 			if (_currentHoldNote == n) _currentHoldNote = null;
 			EmitSignal(SignalName.HoldCompleteInLane, LaneIndex, n);
 		};
+
+		note.NoteHit          += onHit;
+		note.NoteMissed       += onMissed;
+		note.HoldComplete     += onHoldComplete;
 	}
 
 	private void ShowReleasePenalty()
