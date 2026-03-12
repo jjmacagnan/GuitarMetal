@@ -33,6 +33,10 @@ public partial class GameManager : Node3D
 	// ── Pool de partículas (uma por lane, reutilizável) ───────────────────
 	private GpuParticles3D[] _hitParticles;
 
+	// ── Pool de partículas de hold (contínuas enquanto segurado) ──────────
+	private GpuParticles3D[] _holdFireParticles;
+	private bool[]           _laneHolding;
+
 	// ── Estado ─────────────────────────────────────────────────────────────
 	private int    _score;
 	private int    _combo;
@@ -178,6 +182,7 @@ public partial class GameManager : Node3D
 		}
 
 		InitParticlePool();
+		InitHoldParticlePool();
 		BuildPauseOverlay();
 		UpdateHUD();
 	}
@@ -462,6 +467,8 @@ public partial class GameManager : Node3D
 
 		ShowFeedback(label, color);
 		SpawnFireEffect(lane);
+		// Fogo contínuo começa ao acertar uma hold note
+		if (note.IsLong) StartHoldFire(lane);
 		CheckSongEnd();
 	}
 
@@ -478,8 +485,9 @@ public partial class GameManager : Node3D
 		GameData.HoldsComplete++;
 		_resolvedNotes++;
 
+		StopHoldFire(lane);
 		ShowFeedback("HOLD!", new Color(0.8f, 0.4f, 1f));
-		SpawnFireEffect(lane);
+		SpawnFireEffect(lane);   // burst final ao completar
 		CheckSongEnd();
 	}
 
@@ -505,6 +513,81 @@ public partial class GameManager : Node3D
 		// evitando NullReferenceException caso o nó tenha sido liberado.
 		if (!IsInstanceValid(_hitParticles[lane])) return;
 		_hitParticles[lane].Restart();
+	}
+
+	// ── Pool de partículas contínuas de hold ───────────────────────────────
+	/// <summary>Cria um GpuParticles3D contínuo por lane. Chamado uma vez no _Ready.</summary>
+	private void InitHoldParticlePool()
+	{
+		_holdFireParticles = new GpuParticles3D[5];
+		_laneHolding       = new bool[5];
+		for (int i = 0; i < 5; i++)
+		{
+			_holdFireParticles[i]          = BuildContinuousFireParticle(LaneColors[i]);
+			_holdFireParticles[i].Position = new Vector3(LaneX[i], 0.4f, Note.HitLineZ);
+			_holdFireParticles[i].Emitting = false;
+			AddChild(_holdFireParticles[i]);
+		}
+	}
+
+	/// <summary>Liga o fogo contínuo de uma lane enquanto o hold está ativo.</summary>
+	private void StartHoldFire(int lane)
+	{
+		if (_holdFireParticles == null || lane < 0 || lane >= _holdFireParticles.Length) return;
+		if (!IsInstanceValid(_holdFireParticles[lane])) return;
+		_laneHolding[lane]                  = true;
+		_holdFireParticles[lane].Emitting   = true;
+	}
+
+	/// <summary>Desliga o fogo contínuo de uma lane. No-op se já estava desligado.</summary>
+	private void StopHoldFire(int lane)
+	{
+		if (_holdFireParticles == null || lane < 0 || lane >= _holdFireParticles.Length) return;
+		if (!IsInstanceValid(_holdFireParticles[lane])) return;
+		_laneHolding[lane]                  = false;
+		_holdFireParticles[lane].Emitting   = false;
+	}
+
+	/// <summary>Constrói um GpuParticles3D contínuo para o efeito de hold.</summary>
+	private static GpuParticles3D BuildContinuousFireParticle(Color color)
+	{
+		var mat = new ParticleProcessMaterial();
+		mat.Direction          = new Vector3(0f, 1f, 0f);
+		mat.Spread             = 30f;
+		mat.InitialVelocityMin = 2f;
+		mat.InitialVelocityMax = 5f;
+		mat.Gravity            = new Vector3(0f, -1.5f, 0f);
+		mat.ScaleMin           = 0.10f;
+		mat.ScaleMax           = 0.30f;
+
+		var gradient = new Gradient();
+		gradient.Colors  = new Color[]
+		{
+			color.Lightened(0.5f),
+			new Color(Mathf.Max(color.R, 0.9f), color.G * 0.2f, 0f, 0.8f),
+			new Color(0.3f, 0f, 0f, 0f)
+		};
+		gradient.Offsets = new float[] { 0f, 0.5f, 1f };
+		mat.ColorRamp = new GradientTexture1D { Gradient = gradient };
+
+		var quadMesh = new QuadMesh { Size = new Vector2(0.35f, 0.35f) };
+		quadMesh.Material = new StandardMaterial3D
+		{
+			ShadingMode            = BaseMaterial3D.ShadingModeEnum.Unshaded,
+			VertexColorUseAsAlbedo = true,
+			Transparency           = BaseMaterial3D.TransparencyEnum.Alpha,
+			BillboardMode          = BaseMaterial3D.BillboardModeEnum.Enabled,
+		};
+
+		return new GpuParticles3D
+		{
+			OneShot         = false,      // emissão contínua enquanto Emitting = true
+			Explosiveness   = 0f,
+			Amount          = 24,
+			Lifetime        = 0.55f,
+			ProcessMaterial = mat,
+			DrawPass1       = quadMesh,
+		};
 	}
 
 	/// <summary>Constrói um GpuParticles3D configurado para a cor da lane.</summary>
@@ -557,6 +640,7 @@ public partial class GameManager : Node3D
 		GameData.NotesMissed++;
 		_resolvedNotes++;
 
+		StopHoldFire(lane);   // no-op se não havia hold ativo nessa lane
 		ShowFeedback("MISS", Colors.Red);
 		CheckSongEnd();
 	}
@@ -572,6 +656,9 @@ public partial class GameManager : Node3D
 	{
 		if (_songEnded) return;
 		_songEnded = true;
+
+		// Para todos os efeitos de hold que possam estar ativos
+		for (int i = 0; i < 5; i++) StopHoldFire(i);
 
 		// Conta notas não-resolvidas como miss para que a acurácia final seja consistente.
 		// Isso acontece quando o áudio termina antes de todas as notas passarem pela hitline.
