@@ -188,6 +188,8 @@ public partial class Note : Node3D
 
     public void ReleaseHold()
     {
-        if (IsLong && WasHit) _isBeingHeld = false;
+        // FIX H4: Guarda contra _holdResolved para evitar transição de estado indevida
+        // caso ReleaseHold seja chamado após o hold já ter sido completado ou perdido.
+        if (IsLong && WasHit && !_holdResolved) _isBeingHeld = false;
     }
 }
