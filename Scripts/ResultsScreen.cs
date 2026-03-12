@@ -4,14 +4,17 @@ public partial class ResultsScreen : Control
 {
     public override void _Ready()
     {
+        // Título
+        SetLabel("VBox/TitleLabel", Locale.Tr("RESULT"));
+
         SetLabel("VBox/GradeLabel",    GameData.Grade);
-        SetLabel("VBox/ScoreLabel",    $"Score: {GameData.Score:N0}");
-        SetLabel("VBox/AccLabel",      $"Precisão: {GameData.Accuracy:F1}%");
-        SetLabel("VBox/HitLabel",      $"Acertos: {GameData.NotesHit} / {GameData.TotalNotes}");
-        SetLabel("VBox/MissLabel",     $"Erros: {GameData.NotesMissed}");
-        SetLabel("VBox/HoldsLabel",    $"Holds completos: {GameData.HoldsComplete}");
+        SetLabel("VBox/ScoreLabel",    Locale.Tr("SCORE_FMT", $"{GameData.Score:N0}"));
+        SetLabel("VBox/AccLabel",      Locale.Tr("ACCURACY_FMT", $"{GameData.Accuracy:F1}"));
+        SetLabel("VBox/HitLabel",      Locale.Tr("HITS_FMT", GameData.NotesHit, GameData.TotalNotes));
+        SetLabel("VBox/MissLabel",     Locale.Tr("MISSES_FMT", GameData.NotesMissed));
+        SetLabel("VBox/HoldsLabel",    Locale.Tr("HOLDS_FMT", GameData.HoldsComplete));
         // FIX M6: Exibe o maior combo alcançado. O nó MaxComboLabel deve existir na cena.
-        SetLabel("VBox/MaxComboLabel", $"Max Combo: {GameData.MaxCombo}x");
+        SetLabel("VBox/MaxComboLabel", Locale.Tr("MAX_COMBO_FMT", GameData.MaxCombo));
 
         var gradeLabel = GetNodeOrNull<Label>("VBox/GradeLabel");
         if (gradeLabel != null)
@@ -30,10 +33,18 @@ public partial class ResultsScreen : Control
         var playAgain = GetNodeOrNull<Button>("VBox/PlayAgainButton");
         var menu      = GetNodeOrNull<Button>("VBox/MenuButton");
 
-        if (playAgain != null) playAgain.Pressed += () => GetTree().ChangeSceneToFile("res://Scenes/SongSelect.tscn");
+        if (playAgain != null)
+        {
+            playAgain.Text = Locale.Tr("PLAY_AGAIN");
+            playAgain.Pressed += () => GetTree().ChangeSceneToFile("res://Scenes/SongSelect.tscn");
+        }
         else GD.PushError("[ResultsScreen] PlayAgainButton não encontrado!");
 
-        if (menu != null) menu.Pressed += () => GetTree().ChangeSceneToFile("res://Scenes/MainMenu.tscn");
+        if (menu != null)
+        {
+            menu.Text = Locale.Tr("MAIN_MENU");
+            menu.Pressed += () => GetTree().ChangeSceneToFile("res://Scenes/MainMenu.tscn");
+        }
         else GD.PushError("[ResultsScreen] MenuButton não encontrado!");
 
         // Foca o botão "Jogar Novamente" para navegação por controle

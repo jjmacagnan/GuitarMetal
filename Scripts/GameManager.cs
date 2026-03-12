@@ -29,6 +29,7 @@ public partial class GameManager : Node3D
 	private Label             _multLabel;
 	private Label             _feedbackLabel;
 	private Label             _accuracyLabel;
+	private Label             _keyHintsLabel;
 
 	// ── Pool de partículas (uma por lane, reutilizável) ───────────────────
 	private GpuParticles3D[] _hitParticles;
@@ -91,6 +92,8 @@ public partial class GameManager : Node3D
 		_multLabel     = GetNodeOrNull<Label>("HUD/MultLabel");
 		_feedbackLabel = GetNodeOrNull<Label>("HUD/FeedbackLabel");
 		_accuracyLabel = GetNodeOrNull<Label>("HUD/AccuracyLabel");
+		_keyHintsLabel = GetNodeOrNull<Label>("HUD/KeyHints");
+		if (_keyHintsLabel != null) _keyHintsLabel.Text = Locale.Tr("CONTROLS_HINT_GAME");
 
 		// Inicializa lanes
 		_lanes = new Lane[5];
@@ -303,15 +306,15 @@ public partial class GameManager : Node3D
 		vbox.Alignment = BoxContainer.AlignmentMode.Center;
 
 		// Título
-		var title = new Label { Text = "PAUSADO", HorizontalAlignment = HorizontalAlignment.Center };
+		var title = new Label { Text = Locale.Tr("PAUSED"), HorizontalAlignment = HorizontalAlignment.Center };
 		title.AddThemeFontSizeOverride("font_size", 42);
 		title.AddThemeColorOverride("font_color", new Color(0.2f, 0.9f, 1f));
 		vbox.AddChild(title);
 
 		// Botões
-		var btnResume  = MakePauseButton("Continuar",       ResumeGame);
-		var btnRestart = MakePauseButton("Recomeçar",       RestartSong);
-		var btnQuit    = MakePauseButton("Sair para Menu",  QuitToMenu);
+		var btnResume  = MakePauseButton(Locale.Tr("RESUME"),       ResumeGame);
+		var btnRestart = MakePauseButton(Locale.Tr("RESTART"),      RestartSong);
+		var btnQuit    = MakePauseButton(Locale.Tr("QUIT_TO_MENU"), QuitToMenu);
 
 		vbox.AddChild(btnResume);
 		vbox.AddChild(btnRestart);
@@ -454,9 +457,9 @@ public partial class GameManager : Node3D
 		float greatThreshold   = 0.06f  * note.Speed * diffMult;
 		// goodThreshold is implicit; anything <= goodThreshold is GOOD
 
-		if      (dist < perfectThreshold) { baseScore = 100; label = "PERFECT!"; color = Colors.Cyan;   }
-		else if (dist < greatThreshold)   { baseScore =  75; label = "GREAT";    color = Colors.Yellow; }
-		else                               { baseScore =  50; label = "GOOD";     color = Colors.White;  }
+		if      (dist < perfectThreshold) { baseScore = 100; label = Locale.Tr("PERFECT"); color = Colors.Cyan;   }
+		else if (dist < greatThreshold)   { baseScore =  75; label = Locale.Tr("GREAT");   color = Colors.Yellow; }
+		else                               { baseScore =  50; label = Locale.Tr("GOOD");    color = Colors.White;  }
 
 		_score += baseScore * _multiplier;
 		GameData.NotesHit++;
@@ -486,7 +489,7 @@ public partial class GameManager : Node3D
 		_resolvedNotes++;
 
 		StopHoldFire(lane);
-		ShowFeedback("HOLD!", new Color(0.8f, 0.4f, 1f));
+		ShowFeedback(Locale.Tr("HOLD"), new Color(0.8f, 0.4f, 1f));
 		SpawnFireEffect(lane);   // burst final ao completar
 		CheckSongEnd();
 	}
@@ -641,7 +644,7 @@ public partial class GameManager : Node3D
 		_resolvedNotes++;
 
 		StopHoldFire(lane);   // no-op se não havia hold ativo nessa lane
-		ShowFeedback("MISS", Colors.Red);
+		ShowFeedback(Locale.Tr("MISS"), Colors.Red);
 		CheckSongEnd();
 	}
 
@@ -707,7 +710,7 @@ public partial class GameManager : Node3D
 	private void UpdateHUD()
 	{
 		if (_scoreLabel != null) _scoreLabel.Text = $"Score: {_score:N0}";
-		if (_comboLabel != null) _comboLabel.Text = _combo > 1 ? $"x{_combo} Combo" : "";
+		if (_comboLabel != null) _comboLabel.Text = _combo > 1 ? Locale.Tr("COMBO_FMT", _combo) : "";
 		if (_multLabel  != null) _multLabel.Text  = _multiplier > 1 ? $"{_multiplier}x" : "";
 
 		if (_accuracyLabel != null)

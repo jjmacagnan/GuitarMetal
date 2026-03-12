@@ -18,6 +18,8 @@ public partial class SongSelectMenu : Control
     private VBoxContainer _songList;
     private Label         _previewLabel;
     private CheckBox      _missSfxCheck;
+    private Label         _titleLabel;
+    private Button        _backButton;
 
     // Extensões de áudio reconhecidas (em ordem de prioridade dentro de uma pasta)
     // .opus NÃO está na lista — Godot 4 não suporta o formato Opus.
@@ -32,9 +34,10 @@ public partial class SongSelectMenu : Control
     {
         _songList     = GetNodeOrNull<VBoxContainer>("VBox/ScrollContainer/SongList");
         _previewLabel = GetNodeOrNull<Label>("VBox/PreviewLabel");
+        _titleLabel   = GetNodeOrNull<Label>("VBox/TitleLabel");
+        _backButton   = GetNodeOrNull<Button>("VBox/BackButton");
 
-        GetNodeOrNull<Button>("VBox/BackButton")
-            ?.Connect("pressed", Callable.From(() => GetTree().ChangeSceneToFile("res://Scenes/MainMenu.tscn")));
+        _backButton?.Connect("pressed", Callable.From(() => GetTree().ChangeSceneToFile("res://Scenes/MainMenu.tscn")));
 
         _missSfxCheck = GetNodeOrNull<CheckBox>("VBox/MissSfxCheck");
         if (_missSfxCheck != null)
@@ -43,6 +46,7 @@ public partial class SongSelectMenu : Control
             _missSfxCheck.Toggled += (on) => GameData.MissSfxEnabled = on;
         }
 
+        ApplyLocale();
         PopulateSongs();
     }
 
@@ -55,6 +59,13 @@ public partial class SongSelectMenu : Control
         }
     }
 
+    private void ApplyLocale()
+    {
+        if (_titleLabel   != null) _titleLabel.Text   = Locale.Tr("SELECT_SONG");
+        if (_backButton   != null) _backButton.Text   = Locale.Tr("BACK");
+        if (_missSfxCheck != null) _missSfxCheck.Text = Locale.Tr("MISS_SFX_OPTION");
+    }
+
     // ── Lista de músicas ───────────────────────────────────────────────────
 
     private void PopulateSongs()
@@ -65,7 +76,7 @@ public partial class SongSelectMenu : Control
 
         if (songs.Count == 0)
         {
-            var empty = new Label { Text = "Nenhuma música encontrada em res://Audio/" };
+            var empty = new Label { Text = Locale.Tr("NO_SONGS") };
             _songList.AddChild(empty);
             return;
         }

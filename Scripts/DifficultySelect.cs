@@ -8,7 +8,7 @@ using System.Collections.Generic;
 /// </summary>
 public partial class DifficultySelect : Control
 {
-	private static readonly Dictionary<string, (string Label, string Stars, Color Color)> DifficultyInfo = new()
+	private static readonly Dictionary<string, (string LabelKey, string Stars, Color Color)> DifficultyInfo = new()
 	{
 		["EasySingle"]   = ("EASY",   "★☆☆☆", new Color(0.3f, 0.9f, 0.3f)),
 		["MediumSingle"] = ("MEDIUM", "★★☆☆", new Color(1.0f, 0.85f, 0.2f)),
@@ -22,10 +22,23 @@ public partial class DifficultySelect : Control
 
 	public override void _Ready()
 	{
+		// Título da tela
+		var titleLabel = GetNodeOrNull<Label>("VBox/TitleLabel");
+		if (titleLabel != null) titleLabel.Text = Locale.Tr("DIFFICULTY");
+
 		// Título da música
 		var songLabel = GetNodeOrNull<Label>("VBox/SongLabel");
 		if (songLabel != null)
 			songLabel.Text = GameData.SelectedSongName;
+
+		// Botão Voltar
+		var backButton = GetNodeOrNull<Button>("VBox/BackButton");
+		if (backButton != null)
+		{
+			backButton.Text = Locale.Tr("BACK");
+			backButton.Connect("pressed", Callable.From(
+				() => GetTree().ChangeSceneToFile("res://Scenes/SongSelect.tscn")));
+		}
 
 		// Grid de dificuldades
 		var grid = GetNodeOrNull<GridContainer>("VBox/DifficultyGrid");
@@ -44,7 +57,7 @@ public partial class DifficultySelect : Control
 			if (!DifficultyInfo.TryGetValue(diff, out var info)) continue;
 
 			string captured = diff;
-			var btn = BuildDifficultyButton(info.Label, info.Stars, info.Color);
+			var btn = BuildDifficultyButton(Locale.Tr(info.LabelKey), info.Stars, info.Color);
 			btn.Pressed += () => OnDifficultySelected(captured);
 			grid.AddChild(btn);
 			firstBtn ??= btn;
@@ -56,7 +69,7 @@ public partial class DifficultySelect : Control
 			GD.PushWarning("[DifficultySelect] Nenhuma dificuldade disponível.");
 			var msg = new Label
 			{
-				Text                = "Nenhuma dificuldade encontrada neste chart.",
+				Text                = Locale.Tr("NO_DIFFICULTY"),
 				HorizontalAlignment = HorizontalAlignment.Center,
 			};
 			msg.AddThemeColorOverride("font_color", Colors.OrangeRed);
@@ -69,11 +82,6 @@ public partial class DifficultySelect : Control
 
 		// Foca a primeira dificuldade disponível
 		firstBtn.CallDeferred(Control.MethodName.GrabFocus);
-
-		// Botão Voltar
-		GetNodeOrNull<Button>("VBox/BackButton")
-			?.Connect("pressed", Callable.From(
-				() => GetTree().ChangeSceneToFile("res://Scenes/SongSelect.tscn")));
 	}
 
 	public override void _UnhandledInput(InputEvent @event)

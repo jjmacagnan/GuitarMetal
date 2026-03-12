@@ -64,6 +64,12 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 22
 text = "Sair"
 
+[node name="LanguageButton" type="Button" parent="VBox"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Idioma: Português"
+
 [node name="ControlsLabel" type="Label" parent="." unique_id=84117427]
 layout_mode = 1
 anchors_preset = 12

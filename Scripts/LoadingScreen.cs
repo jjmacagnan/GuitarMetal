@@ -10,6 +10,7 @@ public partial class LoadingScreen : Control
 {
 	private Label       _songLabel;
 	private Label       _statusLabel;
+	private Label       _loadingLabel;
 	private ProgressBar _progressBar;
 
 	private enum State { Init, LoadAudio, ReadMetadata, GenerateChart, Ready, Error }
@@ -25,15 +26,17 @@ public partial class LoadingScreen : Control
 
 	public override void _Ready()
 	{
-		_songLabel   = GetNodeOrNull<Label>("VBox/SongLabel");
-		_statusLabel = GetNodeOrNull<Label>("VBox/StatusLabel");
-		_progressBar = GetNodeOrNull<ProgressBar>("VBox/ProgressBar");
+		_songLabel    = GetNodeOrNull<Label>("VBox/SongLabel");
+		_statusLabel  = GetNodeOrNull<Label>("VBox/StatusLabel");
+		_loadingLabel = GetNodeOrNull<Label>("VBox/LoadingLabel");
+		_progressBar  = GetNodeOrNull<ProgressBar>("VBox/ProgressBar");
 
-		if (_songLabel   != null) _songLabel.Text   = GameData.SelectedSongName;
-		if (_progressBar != null) _progressBar.Value = 0;
+		if (_loadingLabel != null) _loadingLabel.Text = Locale.Tr("LOADING");
+		if (_songLabel    != null) _songLabel.Text    = GameData.SelectedSongName;
+		if (_progressBar  != null) _progressBar.Value = 0;
 
 		_bpm = GameData.LoadedBPM > 0 ? GameData.LoadedBPM : 128f;
-		SetStatus("Inicializando...", 5);
+		SetStatus(Locale.Tr("LOADING_INIT"), 5);
 	}
 
 	public override void _UnhandledInput(InputEvent @event)
@@ -52,7 +55,7 @@ public partial class LoadingScreen : Control
 		{
 			// ── Etapa 1: lê o arquivo de áudio ──────────────────────────
 			case State.Init:
-				SetStatus("Lendo arquivo de áudio...", 10);
+				SetStatus(Locale.Tr("LOADING_AUDIO"), 10);
 				_state = State.LoadAudio;
 				break;
 
@@ -67,10 +70,10 @@ public partial class LoadingScreen : Control
 				if (stream == null)
 				{
 					string reason = !fileExists
-						? "arquivo não encontrado"
+						? Locale.Tr("ERR_NOT_FOUND")
 						: !hasImport
-							? "não importado (abra o editor Godot para importar)"
-							: "formato não suportado (.opus não é aceito — use .ogg/.mp3/.wav)";
+							? Locale.Tr("ERR_NOT_IMPORTED")
+							: Locale.Tr("ERR_UNSUPPORTED");
 					GD.PushError($"[Loading] Falha ao carregar áudio ({reason}): {audioPath}");
 					SetStatus($"Erro: {reason}\n[ESC para voltar]", 0);
 					_state = State.Error;
@@ -78,7 +81,7 @@ public partial class LoadingScreen : Control
 				}
 
 				GD.Print($"[Loading] Áudio carregado: {audioPath} ({stream.GetLength():F1}s)");
-				SetStatus("Lendo metadados da música...", 30);
+				SetStatus(Locale.Tr("LOADING_META"), 30);
 				_state = State.ReadMetadata;
 				break;
 
@@ -107,7 +110,7 @@ public partial class LoadingScreen : Control
 					GD.Print($"[Loading] BPM={_bpm}, offset={_startOffset:F1}s, {_beatCount} beats");
 				}
 
-				SetStatus($"Gerando notas (BPM {_bpm}, {_beatCount} beats)...", 60);
+				SetStatus(Locale.Tr("LOADING_NOTES_FMT", _bpm, _beatCount), 60);
 				_state = State.GenerateChart;
 				break;
 
@@ -140,7 +143,7 @@ public partial class LoadingScreen : Control
 				GameData.PreparedNotes = notes;
 				GameData.LoadedBPM     = _bpm;
 
-				SetStatus("Pronto!", 100);
+				SetStatus(Locale.Tr("LOADING_READY"), 100);
 				_state = State.Ready;
 
 				var t = GetTree().CreateTimer(0.6f);

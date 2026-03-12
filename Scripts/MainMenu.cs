@@ -2,19 +2,32 @@ using Godot;
 
 public partial class MainMenu : Control
 {
+	private Label  _titleLabel;
+	private Button _playButton;
+	private Button _quitButton;
+	private Button _langButton;
+	private Label  _controlsLabel;
+
 	public override void _Ready()
 	{
-		var play = GetNodeOrNull<Button>("VBox/PlayButton");
-		var quit = GetNodeOrNull<Button>("VBox/QuitButton");
+		_titleLabel    = GetNodeOrNull<Label>("VBox/TitleLabel");
+		_playButton    = GetNodeOrNull<Button>("VBox/PlayButton");
+		_quitButton    = GetNodeOrNull<Button>("VBox/QuitButton");
+		_langButton    = GetNodeOrNull<Button>("VBox/LanguageButton");
+		_controlsLabel = GetNodeOrNull<Label>("ControlsLabel");
 
-		if (play != null) play.Pressed += OnPlayPressed;
+		if (_playButton != null) _playButton.Pressed += OnPlayPressed;
 		else GD.PushError("[MainMenu] PlayButton não encontrado!");
 
-		if (quit != null) quit.Pressed += OnQuitPressed;
+		if (_quitButton != null) _quitButton.Pressed += OnQuitPressed;
 		else GD.PushError("[MainMenu] QuitButton não encontrado!");
 
+		if (_langButton != null) _langButton.Pressed += OnLanguageToggle;
+
 		// Foca Play ao entrar para navegação por controle
-		play?.CallDeferred(Control.MethodName.GrabFocus);
+		_playButton?.CallDeferred(Control.MethodName.GrabFocus);
+
+		ApplyLocale();
 	}
 
 	public override void _UnhandledInput(InputEvent @event)
@@ -22,11 +35,28 @@ public partial class MainMenu : Control
 		// B (ui_cancel) no menu principal → foca o botão Quit
 		if (@event.IsActionPressed("ui_cancel"))
 		{
-			GetNodeOrNull<Button>("VBox/QuitButton")?.GrabFocus();
+			_quitButton?.GrabFocus();
 			GetViewport().SetInputAsHandled();
 		}
 	}
 
 	private void OnPlayPressed() => GetTree().ChangeSceneToFile("res://Scenes/SongSelect.tscn");
 	private void OnQuitPressed() => GetTree().Quit();
+
+	private void OnLanguageToggle()
+	{
+		Locale.Current = Locale.Current == Locale.Language.PT
+			? Locale.Language.EN
+			: Locale.Language.PT;
+		ApplyLocale();
+	}
+
+	private void ApplyLocale()
+	{
+		if (_titleLabel    != null) _titleLabel.Text    = Locale.Tr("TITLE");
+		if (_playButton    != null) _playButton.Text    = Locale.Tr("PLAY");
+		if (_quitButton    != null) _quitButton.Text    = Locale.Tr("QUIT");
+		if (_langButton    != null) _langButton.Text    = Locale.Tr("LANGUAGE");
+		if (_controlsLabel != null) _controlsLabel.Text = Locale.Tr("CONTROLS_HINT");
+	}
 }
