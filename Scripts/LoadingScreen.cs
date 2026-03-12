@@ -12,7 +12,7 @@ public partial class LoadingScreen : Control
 	private Label       _statusLabel;
 	private ProgressBar _progressBar;
 
-	private enum State { Init, LoadAudio, ReadMetadata, GenerateChart, Ready }
+	private enum State { Init, LoadAudio, ReadMetadata, GenerateChart, Ready, Error }
 	private State _state = State.Init;
 
 	// Metadados lidos do JSON (ou defaults)
@@ -36,6 +36,16 @@ public partial class LoadingScreen : Control
 		SetStatus("Inicializando...", 5);
 	}
 
+	public override void _UnhandledInput(InputEvent @event)
+	{
+		// Permite voltar para a seleção de música em caso de erro (ou a qualquer momento)
+		if (_state == State.Error && @event.IsActionPressed("ui_cancel"))
+		{
+			GetTree().ChangeSceneToFile("res://Scenes/SongSelect.tscn");
+			GetViewport().SetInputAsHandled();
+		}
+	}
+
 	public override void _Process(double delta)
 	{
 		switch (_state)
@@ -47,12 +57,27 @@ public partial class LoadingScreen : Control
 				break;
 
 			case State.LoadAudio:
-				var stream = GD.Load<AudioStream>(GameData.SelectedSongPath);
+				string audioPath = GameData.SelectedSongPath;
+				bool fileExists  = FileAccess.FileExists(audioPath);
+				bool hasImport   = FileAccess.FileExists(audioPath + ".import");
+
+				var stream = GD.Load<AudioStream>(audioPath);
 				GameData.LoadedStream = stream;
 
 				if (stream == null)
-					GD.PushError($"[Loading] Áudio não encontrado: {GameData.SelectedSongPath}");
+				{
+					string reason = !fileExists
+						? "arquivo não encontrado"
+						: !hasImport
+							? "não importado (abra o editor Godot para importar)"
+							: "formato não suportado (.opus não é aceito — use .ogg/.mp3/.wav)";
+					GD.PushError($"[Loading] Falha ao carregar áudio ({reason}): {audioPath}");
+					SetStatus($"Erro: {reason}\n[ESC para voltar]", 0);
+					_state = State.Error;
+					break;
+				}
 
+				GD.Print($"[Loading] Áudio carregado: {audioPath} ({stream.GetLength():F1}s)");
 				SetStatus("Lendo metadados da música...", 30);
 				_state = State.ReadMetadata;
 				break;
@@ -123,6 +148,7 @@ public partial class LoadingScreen : Control
 				break;
 
 			case State.Ready:
+			case State.Error:
 				SetProcess(false);
 				break;
 		}
@@ -133,31 +159,63 @@ public partial class LoadingScreen : Control
 	private void ReadChartMetadata()
 	{
 		string audioPath = GameData.SelectedSongPath;
-		int lastDot = audioPath.LastIndexOf('.');
+		int    lastDot   = audioPath.LastIndexOf('.');
 		string basePath  = lastDot >= 0 ? audioPath[..lastDot] : audioPath;
+		string dir       = audioPath[..(audioPath.LastIndexOf('/') + 1)];
 
-		// Prioridade: .chart (Clone Hero) → .json → procedural
-		if (TryLoadDotChart(basePath + ".chart")) return;
+		// Lê song.ini da pasta (se existir) para nome e delay de áudio
+		float iniDelayMs = 0f;
+		string iniPath = dir + "song.ini";
+		if (FileAccess.FileExists(iniPath))
+		{
+			var info = SongIniReader.Read(iniPath);
+			iniDelayMs = info.DelayMs;
+			string displayName = SongIniReader.BuildDisplayName(info, GameData.SelectedSongName);
+			if (!string.IsNullOrEmpty(displayName))
+				GameData.SelectedSongName = displayName;
+		}
+
+		// Prioridade: notes.chart (Clone Hero / Enchor) → [nome].chart → .json → procedural
+		if (TryLoadDotChart(dir + "notes.chart", iniDelayMs)) return;
+		if (TryLoadDotChart(basePath + ".chart", iniDelayMs)) return;
 		TryLoadJson(basePath + ".json");
 	}
 
-	private bool TryLoadDotChart(string chartPath)
+	private bool TryLoadDotChart(string chartPath, float iniDelayMs = 0f)
 	{
 		if (!FileAccess.FileExists(chartPath)) return false;
 
 		var imported = ChartImporter.Import(chartPath, GameData.SelectedDifficulty);
 		if (imported == null) return false;
 
-		_bpm         = imported.BPM;
-		_startOffset = imported.StartOffset;
+		_bpm = imported.BPM;
+
+		// Offset: combina o offset do .chart com o delay do song.ini (ambos podem ser não-zero)
+		_startOffset = imported.StartOffset + iniDelayMs / 1000f;
+
 		if (!string.IsNullOrEmpty(imported.SongName))
 			GameData.SelectedSongName = imported.SongName;
 
 		if (imported.Notes.Count > 0)
 		{
 			_chartNotes = new List<NoteData>();
-			foreach (var nd in imported.Notes) _chartNotes.Add(nd);
-			GD.Print($"[Loading] .chart carregado: {_chartNotes.Count} notas, BPM={_bpm}");
+
+			// Ajusta o tempo de cada nota se houver diferença entre o offset do chart e o calculado
+			float chartOffset      = imported.StartOffset;
+			float offsetDifference = _startOffset - chartOffset;
+
+			foreach (var nd in imported.Notes)
+			{
+				_chartNotes.Add(new NoteData
+				{
+					Time     = nd.Time + offsetDifference,
+					Lane     = nd.Lane,
+					IsLong   = nd.IsLong,
+					Duration = nd.Duration
+				});
+			}
+
+			GD.Print($"[Loading] .chart carregado: {_chartNotes.Count} notas, BPM={_bpm}, offset={_startOffset:F3}s (chart offset={chartOffset:F3}s, diff={offsetDifference:F3}s)");
 		}
 		return true;
 	}
@@ -192,7 +250,7 @@ public partial class LoadingScreen : Control
 					if (n.TryGetProperty("time",     out var t))  nd.Time     = t.GetDouble();
 					if (n.TryGetProperty("lane",     out var l))  nd.Lane     = l.GetInt32();
 					if (n.TryGetProperty("isLong",   out var il)) nd.IsLong   = il.GetBoolean();
-					if (n.TryGetProperty("duration", out var d))  nd.Duration = d.GetDouble();
+					if (n.TryGetProperty("duration", out var d))  nd.Duration = d.GetSingle();
 					_chartNotes.Add(nd);
 				}
 				_chartNotes.Sort((a, b) => a.Time.CompareTo(b.Time));

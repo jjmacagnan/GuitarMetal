@@ -33,6 +33,19 @@ public partial class ResultsScreen : Control
 
         if (menu != null) menu.Pressed += () => GetTree().ChangeSceneToFile("res://Scenes/MainMenu.tscn");
         else GD.PushError("[ResultsScreen] MenuButton não encontrado!");
+
+        // Foca o botão "Jogar Novamente" para navegação por controle
+        playAgain?.CallDeferred(Control.MethodName.GrabFocus);
+    }
+
+    public override void _UnhandledInput(InputEvent @event)
+    {
+        // B (ui_cancel) → volta ao menu principal
+        if (@event.IsActionPressed("ui_cancel"))
+        {
+            GetTree().ChangeSceneToFile("res://Scenes/MainMenu.tscn");
+            GetViewport().SetInputAsHandled();
+        }
     }
 
     private void SetLabel(string path, string text)

@@ -1,6 +1,7 @@
 using Godot;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 
 /// <summary>
 /// Importa charts no formato .chart (Clone Hero / Guitar Hero).
@@ -122,23 +123,23 @@ public static class ChartImporter
 
 		switch (key)
 		{
-			case "Name":       chart.SongName = val;                  break;
-			case "Resolution": float.TryParse(val, out resolution);   break;
-			case "Offset":     float.TryParse(val, out offset);       break;
+			case "Name":       chart.SongName = val;                                                                break;
+			case "Resolution": float.TryParse(val, NumberStyles.Float, CultureInfo.InvariantCulture, out resolution); break;
+			case "Offset":     float.TryParse(val, NumberStyles.Float, CultureInfo.InvariantCulture, out offset);     break;
 		}
 	}
 
 	private static void ParseBpmLine(string line, SortedDictionary<long, float> bpmMap)
 	{
-		// Formato: tick = BPM millivalue   ex: 0 = BPM 120000
+		// Formato: tick = B millivalue   ex: 0 = B 120000
 		int eq = line.IndexOf('=');
 		if (eq < 0) return;
-		if (!long.TryParse(line[..eq].Trim(), out long tick)) return;
+		if (!long.TryParse(line[..eq].Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out long tick)) return;
 
 		string rest = line[(eq + 1)..].Trim();
-		if (!rest.StartsWith("BPM ")) return;
+		if (!rest.StartsWith("B ")) return;
 
-		if (float.TryParse(rest[4..].Trim(), out float milliVal))
+		if (float.TryParse(rest[2..].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out float milliVal))
 			bpmMap[tick] = milliVal / 1000f;
 	}
 
@@ -148,30 +149,30 @@ public static class ChartImporter
 		// Formato: tick = N fret sustain   ex: 768 = N 0 0
 		int eq = line.IndexOf('=');
 		if (eq < 0) return;
-		if (!long.TryParse(line[..eq].Trim(), out long tick)) return;
+		if (!long.TryParse(line[..eq].Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out long tick)) return;
 
 		string rest = line[(eq + 1)..].Trim();
 		if (!rest.StartsWith("N ")) return;
 
 		string[] parts = rest.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 		if (parts.Length < 3) return;
-		if (!int.TryParse(parts[1], out int fret))    return;
-		if (!long.TryParse(parts[2], out long sustain)) return;
+		if (!int.TryParse(parts[1],  NumberStyles.Integer, CultureInfo.InvariantCulture, out int fret))     return;
+		if (!long.TryParse(parts[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out long sustain)) return;
 
 		// Frets 0-4 = lanes jogáveis; 5+ são modificadores (força, tap, open)
 		if (fret < 0 || fret > 4) return;
 
 		double noteTime  = TicksToSeconds(tick, bpmMap, resolution) + offset;
-		double noteDur   = sustain > 0
-			? TicksToSeconds(tick + sustain, bpmMap, resolution) + offset - noteTime
-			: 0;
+		float  noteDur   = sustain > 0
+			? (float)(TicksToSeconds(tick + sustain, bpmMap, resolution) - TicksToSeconds(tick, bpmMap, resolution))
+			: 0f;
 
 		noteList.Add(new NoteData
 		{
 			Time     = noteTime,
 			Lane     = fret,
 			IsLong   = sustain > 0,
-			Duration = (float)noteDur
+			Duration = noteDur
 		});
 	}
 

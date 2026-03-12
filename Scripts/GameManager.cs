@@ -10,6 +10,12 @@ public partial class GameManager : Node3D
 {
 	[Export] public float NoteSpeed { get; set; } = GameData.DefaultNoteSpeed;
 	[Export] public float BPM       { get; set; } = 128f;
+	/// <summary>
+	/// Compensação manual de latência de áudio em segundos.
+	/// Ajuste se as notas aparecerem muito cedo (valor positivo) ou tarde (valor negativo).
+	/// Padrão: 0 (usa GetOutputLatency automático).
+	/// </summary>
+	[Export] public float AudioLatencyOffset { get; set; } = 0f;
 
 	// Notas surgem em Z=-NoteSpawnDistance e se movem em +Z até a hitline em Z=0
 	private const float SpawnZ    = -GameData.NoteSpawnDistance;
@@ -37,8 +43,10 @@ public partial class GameManager : Node3D
 
 	// ── Pause UI ───────────────────────────────────────────────────────
 	private Control _pauseOverlay;
+	private Button  _pauseResumeButton;
 
 	private double        _songTime;
+	private double        _lastRawAudioTime = -1.0; // último valor de GetPlaybackPosition - latência (-1 = não inicializado)
 	private int           _nextNoteIndex;
 	private List<NoteData> _noteList;
 	private int           _totalNotes;
@@ -71,6 +79,10 @@ public partial class GameManager : Node3D
 	public override void _Ready()
 	{
 		GD.Print("[GameManager] Iniciando...");
+
+		// Publica a velocidade ativa para que GameData.TravelTime seja consistente
+		// com qualquer valor exportado via Inspector (fonte única da verdade).
+		GameData.NoteSpeed = NoteSpeed;
 
 		SetupInputMap();
 		_audio         = GetNodeOrNull<AudioStreamPlayer>("AudioPlayer");
@@ -150,17 +162,18 @@ public partial class GameManager : Node3D
 		//
 		//    AudioDelay: buffer mínimo antes do Play() para evitar clique de início.
 		//    outputLatency: latência real do driver de áudio (compensa o buffer de saída).
-		double outputLatency = AudioServer.GetOutputLatency();
+		double outputLatency = AudioServer.GetOutputLatency() + AudioLatencyOffset;
 		const double AudioDelay = 0.3;
-		_songTime = -TravelTime - AudioDelay;
+		_songTime = -TravelTime - AudioDelay - outputLatency;
+		GameData.SongTime = _songTime;
 
 		// 5. Toca música com delay sincronizado com _songTime
 		if (_audio?.Stream != null)
 		{
-			double delay = TravelTime + AudioDelay;
+			double delay = TravelTime + AudioDelay + outputLatency;
 			var t = GetTree().CreateTimer(delay);
 			t.Timeout += () => { _audio.Play(); };
-			GD.Print($"[GameManager] Música em {delay:F2}s | TravelTime={TravelTime:F2}s | Latência={outputLatency*1000:F0}ms");
+			GD.Print($"[GameManager] Música em {delay:F2}s | TravelTime={TravelTime:F2}s | Latência={outputLatency*1000:F1}ms (offset={AudioLatencyOffset*1000:F1}ms)");
 		}
 
 		InitParticlePool();
@@ -235,6 +248,8 @@ public partial class GameManager : Node3D
 		{
 			if (_audio != null) _audio.StreamPaused = true;
 			_pauseOverlay?.Show();
+			// Foca o botão Continuar para navegação por controle
+			_pauseResumeButton?.CallDeferred(Control.MethodName.GrabFocus);
 		}
 		else
 		{
@@ -287,6 +302,8 @@ public partial class GameManager : Node3D
 		vbox.AddChild(btnRestart);
 		vbox.AddChild(btnQuit);
 
+		_pauseResumeButton = btnResume;
+
 		_pauseOverlay.AddChild(vbox);
 		_pauseOverlay.Hide();
 		hud.AddChild(_pauseOverlay);
@@ -299,6 +316,7 @@ public partial class GameManager : Node3D
 			Text              = text,
 			CustomMinimumSize = new Vector2(280, 52),
 			ProcessMode       = ProcessModeEnum.Always,
+			FocusMode         = Control.FocusModeEnum.All,
 		};
 		btn.AddThemeFontSizeOverride("font_size", 22);
 		btn.Pressed += callback;
@@ -310,13 +328,28 @@ public partial class GameManager : Node3D
 	{
 		if (_songEnded || _paused) return;
 
-		// Ancora _songTime ao clock real do áudio compensando a latência de saída.
-		// GetPlaybackPosition() retorna a posição no stream (não o que o jogador ouve).
-		// Subtrair outputLatency faz _songTime bater com o áudio percebido.
+		// Avança _songTime por delta a cada frame (suave, sem saltos).
+		// Corrige gradualmente em direção ao tempo real do áudio para evitar deriva.
+		// Se a diferença for > 100ms, faz snap imediato.
+		_songTime += delta;
 		if (_audio != null && _audio.Playing)
-			_songTime = _audio.GetPlaybackPosition() - AudioServer.GetOutputLatency();
-		else
-			_songTime += delta;
+		{
+			double rawTime = _audio.GetPlaybackPosition() - (AudioServer.GetOutputLatency() + AudioLatencyOffset);
+			// Ignora leituras idênticas consecutivas (buffer de áudio ainda não atualizou)
+			if (Math.Abs(rawTime - _lastRawAudioTime) > 0.0001)
+			{
+				_lastRawAudioTime = rawTime;
+				double drift = rawTime - _songTime;
+				if (Math.Abs(drift) > 0.05)
+					_songTime = rawTime;                   // drift > 50ms → snap
+				else
+					_songTime += drift * Math.Min(1.0, delta * 4.0); // correção suave (mais lenta para evitar saltos)
+			}
+		}
+
+		// Publica o tempo para que as notas calculem sua posição Z
+		// diretamente a partir do clock do áudio (sem acúmulo de delta).
+		GameData.SongTime = _songTime;
 
 		SpawnNotes();
 		UpdateHUD();
@@ -356,7 +389,7 @@ public partial class GameManager : Node3D
 			Speed    = NoteSpeed,
 			BeatTime = data.Time,
 			IsLong   = data.IsLong,
-			Duration = (float)data.Duration,
+			Duration = data.Duration,
 			Position = new Vector3(LaneX[data.Lane], 0f, SpawnZ)
 		};
 
@@ -369,7 +402,7 @@ public partial class GameManager : Node3D
 	// ── Eventos de acerto ──────────────────────────────────────────────────
 	private void OnNoteHit(int lane, Note note)
 	{
-		// Apenas notas tap chegam aqui (hold heads são filtradas na Lane)
+		if (_songEnded) return;
 		_combo++;
 		_multiplier = _combo switch { >= 30 => 8, >= 20 => 4, >= 10 => 2, _ => 1 };
 
@@ -378,14 +411,18 @@ public partial class GameManager : Node3D
 		string label;
 		Color  color;
 
-		// Thresholds com 20% de margem antes e depois da hitline
-		if      (dist < 0.48f) { baseScore = 100; label = "PERFECT!"; color = Colors.Cyan;   }
-		else if (dist < 1.20f) { baseScore =  75; label = "GREAT";    color = Colors.Yellow; }
+		// PERFECT <25ms | GREAT <60ms | GOOD <90ms  (a NoteSpeed=36)
+		// 25ms × 36 = 0.90u | 60ms × 36 = 2.16u | 90ms × 36 = 3.24u (HitWindow)
+		if      (dist < 0.90f) { baseScore = 100; label = "PERFECT!"; color = Colors.Cyan;   }
+		else if (dist < 2.16f) { baseScore =  75; label = "GREAT";    color = Colors.Yellow; }
 		else                   { baseScore =  50; label = "GOOD";     color = Colors.White;  }
 
 		_score += baseScore * _multiplier;
 		GameData.NotesHit++;
-		_resolvedNotes++;
+
+		// Hold notes: não conta como resolvida agora — será resolvida no HoldComplete ou miss
+		if (!note.IsLong)
+			_resolvedNotes++;
 
 		ShowFeedback(label, color);
 		SpawnFireEffect(lane);
@@ -394,11 +431,13 @@ public partial class GameManager : Node3D
 
 	private void OnHoldComplete(int lane, Note note)
 	{
+		if (_songEnded) return;
 		_combo++;
 		_multiplier = _combo switch { >= 30 => 8, >= 20 => 4, >= 10 => 2, _ => 1 };
 		_score += 150 * _multiplier;
 
-		GameData.NotesHit++;
+		// NotesHit NÃO é incrementado aqui — já foi contado no OnNoteHit (tap).
+		// Incrementar novamente faria accuracy > 100%.
 		GameData.HoldsComplete++;
 		_resolvedNotes++;
 
@@ -472,6 +511,7 @@ public partial class GameManager : Node3D
 
 	private void OnNoteMiss(int lane)
 	{
+		if (_songEnded) return;
 		_combo      = 0;
 		_multiplier = 1;
 		GameData.NotesMissed++;
@@ -492,6 +532,16 @@ public partial class GameManager : Node3D
 	{
 		if (_songEnded) return;
 		_songEnded = true;
+
+		// Conta notas não-resolvidas como miss para que a acurácia final seja consistente.
+		// Isso acontece quando o áudio termina antes de todas as notas passarem pela hitline.
+		int unresolved = _totalNotes - _resolvedNotes;
+		if (unresolved > 0)
+		{
+			GameData.NotesMissed += unresolved;
+			_resolvedNotes = _totalNotes;
+			GD.Print($"[GameManager] {unresolved} notas não-resolvidas contadas como miss");
+		}
 
 		GameData.Score = _score;
 		GD.Print($"[GameManager] Fim! Score={_score}, Acc={GameData.Accuracy:F1}%, Grade={GameData.Grade}");

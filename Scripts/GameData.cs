@@ -7,12 +7,25 @@ using System.Collections.Generic;
 public static class GameData
 {
     // ── Constantes de física (fonte única da verdade) ──────────────────────
-    /// <summary>Velocidade padrão das notas (unidades/s). Deve bater com GameManager.[Export] NoteSpeed.</summary>
+    /// <summary>Velocidade padrão das notas (unidades/s).</summary>
     public const float DefaultNoteSpeed    = 36f;
     /// <summary>Distância de spawn (|Z|). Notas surgem em Z = -NoteSpawnDistance.</summary>
     public const float NoteSpawnDistance   = 60f;
-    /// <summary>Tempo que uma nota leva do spawn até a hitline com a velocidade padrão.</summary>
-    public static float TravelTime         => NoteSpawnDistance / DefaultNoteSpeed;
+    /// <summary>
+    /// Velocidade ativa das notas. GameManager define isso em _Ready para que
+    /// LoadingScreen e GameManager usem sempre o mesmo TravelTime.
+    /// </summary>
+    public static float NoteSpeed          { get; set; } = DefaultNoteSpeed;
+    /// <summary>Tempo que uma nota leva do spawn até a hitline com a velocidade ativa.</summary>
+    public static float TravelTime         => NoteSpawnDistance / NoteSpeed;
+
+    // ── Tempo da música (atualizado pelo GameManager a cada frame) ─────────
+    /// <summary>
+    /// Tempo atual da música em segundos (referência do áudio).
+    /// As notas usam este valor para calcular sua posição Z,
+    /// garantindo sincronização perfeita com o áudio.
+    /// </summary>
+    public static double SongTime { get; set; }
 
     // ── Seleção de música ──────────────────────────────────────────────────
     public static string      SelectedSongPath { get; set; } = "";

@@ -17,16 +17,18 @@ public partial class Note : Node3D
 
     // Hitline em Z=0, notas vêm de Z negativo em direção a Z=0
     public const float HitLineZ  = 0f;
-    public const float HitWindow = 1.5f;
-    private const float MissZ    = 2f;   // passou da hitline → miss
+    // Janela calculada para NoteSpeed=36:  90ms × 36 = 3.24 unidades
+    public const float HitWindow = 3.24f;
+    private const float MissZ    = 3.30f;  // HitWindow + margem → sem zona morta
 
     private MeshInstance3D     _headMesh;
     private MeshInstance3D     _tailMesh;
     private StandardMaterial3D _tailMat;
     private float              _tailLen;
     private float              _originalZ;        // Z inicial (spawn)
-    private float _holdTimer   = 0f;
-    private bool  _isBeingHeld = false;
+    private float _holdTimer    = 0f;
+    private bool  _isBeingHeld  = false;
+    private bool  _holdResolved = false;  // guard contra emissão dupla de sinais
 
     [Signal] public delegate void NoteHitEventHandler(Note note);
     [Signal] public delegate void NoteMissedEventHandler(Note note);
@@ -82,8 +84,12 @@ public partial class Note : Node3D
 
         if (WasHit || Missed) return;
 
-        // Move ao longo do eixo Z em direção à hitline (Z=0)
-        Position += new Vector3(0f, 0f, Speed * (float)delta);
+        // Posição Z calculada diretamente a partir do tempo da música.
+        // Garante que a nota esteja SEMPRE sincronizada com o áudio,
+        // independente de variações de frame rate.
+        // Quando songTime == BeatTime → Z = 0 (hitline).
+        float idealZ = -(float)(BeatTime - GameData.SongTime) * Speed;
+        Position = new Vector3(Position.X, Position.Y, idealZ);
 
         if (Position.Z > MissZ)
         {
@@ -95,9 +101,12 @@ public partial class Note : Node3D
 
     private void ProcessHold(float delta)
     {
+        if (_holdResolved) return;
+
         if (!_isBeingHeld)
         {
             // Tecla solta antes do fim — miss
+            _holdResolved = true;
             Missed = true;
             EmitSignal(SignalName.NoteMissed, this);
             QueueFree();
@@ -119,6 +128,7 @@ public partial class Note : Node3D
 
         if (_holdTimer >= Duration)
         {
+            _holdResolved = true;
             EmitSignal(SignalName.HoldComplete, this);
             QueueFree();
         }
@@ -162,6 +172,9 @@ public partial class Note : Node3D
         {
             _isBeingHeld = true;
             if (_headMesh != null) _headMesh.Visible = false;
+            // Snap para a hitline para que a cauda visual fique alinhada corretamente.
+            // Sem isso, se a nota for acertada fora de Z=0 a cauda fica deslocada.
+            Position = new Vector3(Position.X, Position.Y, HitLineZ);
         }
     }
 

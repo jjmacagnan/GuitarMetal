@@ -1,6 +1,5 @@
 using Godot;
 using System.Collections.Generic;
-using System.Text.Json;
 
 /// <summary>
 /// Dados de uma música (chart).
@@ -59,66 +58,6 @@ public partial class SongChart : Resource
 		}
 	}
 
-	// ── Carregamento via JSON ──────────────────────────────────────────────
-
-	/// <summary>
-	/// Carrega um chart a partir de um arquivo JSON no disco.
-	/// Formato esperado:
-	/// {
-	///   "songName": "...",
-	///   "audioPath": "res://Audio/song.ogg",
-	///   "bpm": 128,
-	///   "startOffset": 0,
-	///   "notes": [
-	///     { "time": 0.0, "lane": 0, "isLong": false, "duration": 0 },
-	///     { "time": 0.469, "lane": 2, "isLong": true, "duration": 0.5 }
-	///   ]
-	/// }
-	/// </summary>
-	public static SongChart LoadFromJson(string filePath)
-	{
-		if (!Godot.FileAccess.FileExists(filePath))
-		{
-			GD.PushError($"[SongChart] Arquivo não encontrado: {filePath}");
-			return null;
-		}
-
-		using var file = Godot.FileAccess.Open(filePath, Godot.FileAccess.ModeFlags.Read);
-		string json = file.GetAsText();
-
-		try
-		{
-			var doc    = JsonDocument.Parse(json);
-			var root   = doc.RootElement;
-			var chart  = new SongChart();
-
-			if (root.TryGetProperty("songName",    out var sn)) chart.SongName    = sn.GetString();
-			if (root.TryGetProperty("audioPath",   out var ap)) chart.AudioPath   = ap.GetString();
-			if (root.TryGetProperty("bpm",         out var bv)) chart.BPM         = bv.GetSingle();
-			if (root.TryGetProperty("startOffset", out var so)) chart.StartOffset = so.GetSingle();
-
-			if (root.TryGetProperty("notes", out var notesArr))
-			{
-				foreach (var n in notesArr.EnumerateArray())
-				{
-					var nd = new NoteData();
-					if (n.TryGetProperty("time",     out var t))  nd.Time     = t.GetDouble();
-					if (n.TryGetProperty("lane",     out var l))  nd.Lane     = l.GetInt32();
-					if (n.TryGetProperty("isLong",   out var il)) nd.IsLong   = il.GetBoolean();
-					if (n.TryGetProperty("duration", out var d))  nd.Duration = d.GetDouble();
-					chart.Notes.Add(nd);
-				}
-			}
-
-			GD.Print($"[SongChart] Chart carregado: {chart.SongName} — {chart.Notes.Count} notas");
-			return chart;
-		}
-		catch (System.Exception ex)
-		{
-			GD.PushError($"[SongChart] Erro ao parsear JSON: {ex.Message}");
-			return null;
-		}
-	}
 }
 
 // ── NoteData ───────────────────────────────────────────────────────────────
@@ -132,5 +71,5 @@ public partial class NoteData : Resource
 	[Export] public double Time     { get; set; } = 0;
 	[Export] public int    Lane     { get; set; } = 0;
 	[Export] public bool   IsLong   { get; set; } = false;
-	[Export] public double Duration { get; set; } = 0;
+	[Export] public float  Duration { get; set; } = 0f;
 }

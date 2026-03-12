@@ -23,6 +23,7 @@ public partial class Lane : Node3D
 
 	// ── Notas ──────────────────────────────────────────────────────────────
 	private readonly List<Note> _activeNotes     = new();
+	private readonly List<Note> _noteSnapshot    = new();  // cópia reutilizável para iteração segura
 	private Note                _currentHoldNote = null;
 	private bool                _wasHolding;
 	private bool                _wasNoteInWindow;
@@ -185,21 +186,24 @@ public partial class Lane : Node3D
 			_hitZoneMat.EmissionEnergyMultiplier = 7.0f;
 		}
 
-		// Hit detection
+		// Hit detection — usa snapshot para evitar InvalidOperationException
+		// caso sinais de hit/miss modifiquem _activeNotes durante a iteração.
 		Note closest    = null;
 		float closestDist = float.MaxValue;
-		foreach (var n in _activeNotes)
+		_noteSnapshot.Clear();
+		_noteSnapshot.AddRange(_activeNotes);
+		foreach (var n in _noteSnapshot)
 		{
-			if (!n.IsInHitWindow()) continue;
-			float d = Mathf.Abs(n.Position.Z - Note.HitLineZ);
+			if (!IsInstanceValid(n) || n.WasHit || n.Missed || !n.IsInHitWindow()) continue;
+			float d = Mathf.Abs(n.GlobalPosition.Z - Note.HitLineZ);
 			if (d < closestDist) { closestDist = d; closest = n; }
 		}
 
 		if (closest != null)
 		{
 			closest.Hit();
-			if (!closest.IsLong)
-				EmitSignal(SignalName.NoteHitInLane, LaneIndex, closest);
+			// Emite para tap E hold — GameManager dá feedback visual (PERFECT/GREAT/GOOD)
+			EmitSignal(SignalName.NoteHitInLane, LaneIndex, closest);
 		}
 	}
 
@@ -231,11 +235,16 @@ public partial class Lane : Node3D
 	{
 		bool isHolding = _currentHoldNote != null && IsInstanceValid(_currentHoldNote);
 
-		// Verifica se alguma nota está na janela de acerto
+		// Verifica se alguma nota está na janela de acerto (iteração segura)
 		bool noteInWindow = false;
 		if (!isHolding)
-			foreach (var n in _activeNotes)
-				if (n.IsInHitWindow()) { noteInWindow = true; break; }
+		{
+			for (int i = _activeNotes.Count - 1; i >= 0; i--)
+			{
+				var n = _activeNotes[i];
+				if (IsInstanceValid(n) && n.IsInHitWindow()) { noteInWindow = true; break; }
+			}
+		}
 
 		if (isHolding)
 		{
@@ -295,17 +304,16 @@ public partial class Lane : Node3D
 	private void ShowReleasePenalty()
 	{
 		if (_hitZoneMat == null) return;
-		var originalMat = _hitZoneMat.EmissionEnergyMultiplier;
+		var originalEnergy = _hitZoneMat.EmissionEnergyMultiplier;
 		_hitZoneMat.Emission = Colors.Red * 2f;
 		_hitZoneMat.EmissionEnergyMultiplier = 8f;
 		var t = GetTree().CreateTimer(0.15f);
 		t.Timeout += () =>
 		{
-			if (_hitZoneMat != null)
-			{
-				_hitZoneMat.Emission = LaneColor * 2.5f;
-				_hitZoneMat.EmissionEnergyMultiplier = originalMat;
-			}
+			// Guard: verifica se o Lane ainda existe na árvore antes de acessar o material
+			if (!IsInstanceValid(this) || _hitZoneMat == null) return;
+			_hitZoneMat.Emission = LaneColor * 2.5f;
+			_hitZoneMat.EmissionEnergyMultiplier = originalEnergy;
 		};
 	}
 }

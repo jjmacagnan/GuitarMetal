@@ -9,6 +9,7 @@
 .claude/
 
 # Áudio e charts (assets pesados, não versionados)
+Audio/*
 Audio/*.ogg
 Audio/*.mp3
 Audio/*.wav
