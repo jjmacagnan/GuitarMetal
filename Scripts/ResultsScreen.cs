@@ -4,12 +4,14 @@ public partial class ResultsScreen : Control
 {
     public override void _Ready()
     {
-        SetLabel("VBox/GradeLabel",  GameData.Grade);
-        SetLabel("VBox/ScoreLabel",  $"Score: {GameData.Score:N0}");
-        SetLabel("VBox/AccLabel",    $"Precisão: {GameData.Accuracy:F1}%");
-        SetLabel("VBox/HitLabel",    $"Acertos: {GameData.NotesHit} / {GameData.TotalNotes}");
-        SetLabel("VBox/MissLabel",   $"Erros: {GameData.NotesMissed}");
-        SetLabel("VBox/HoldsLabel",  $"Holds completos: {GameData.HoldsComplete}");
+        SetLabel("VBox/GradeLabel",    GameData.Grade);
+        SetLabel("VBox/ScoreLabel",    $"Score: {GameData.Score:N0}");
+        SetLabel("VBox/AccLabel",      $"Precisão: {GameData.Accuracy:F1}%");
+        SetLabel("VBox/HitLabel",      $"Acertos: {GameData.NotesHit} / {GameData.TotalNotes}");
+        SetLabel("VBox/MissLabel",     $"Erros: {GameData.NotesMissed}");
+        SetLabel("VBox/HoldsLabel",    $"Holds completos: {GameData.HoldsComplete}");
+        // FIX M6: Exibe o maior combo alcançado. O nó MaxComboLabel deve existir na cena.
+        SetLabel("VBox/MaxComboLabel", $"Max Combo: {GameData.MaxCombo}x");
 
         var gradeLabel = GetNodeOrNull<Label>("VBox/GradeLabel");
         if (gradeLabel != null)

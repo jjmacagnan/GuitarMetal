@@ -80,10 +80,6 @@ public partial class GameManager : Node3D
 	{
 		GD.Print("[GameManager] Iniciando...");
 
-		// Publica a velocidade ativa para que GameData.TravelTime seja consistente
-		// com qualquer valor exportado via Inspector (fonte única da verdade).
-		GameData.NoteSpeed = NoteSpeed;
-
 		SetupInputMap();
 		_audio         = GetNodeOrNull<AudioStreamPlayer>("AudioPlayer");
 		_scoreLabel    = GetNodeOrNull<Label>("HUD/ScoreLabel");
@@ -110,8 +106,13 @@ public partial class GameManager : Node3D
 			_lanes[i].NoteMissedInLane   += (_) => OnNoteMiss(captured);
 		}
 
-		// Usa BPM do GameData se disponível (lido do JSON da música)
+		// FIX H3: BPM é resolvido ANTES de publicar NoteSpeed no GameData,
+		// garantindo que qualquer cálculo baseado em TravelTime use os valores finais.
 		if (GameData.LoadedBPM > 0) BPM = GameData.LoadedBPM;
+
+		// Publica a velocidade ativa para que GameData.TravelTime seja consistente
+		// com qualquer valor exportado via Inspector (fonte única da verdade).
+		GameData.NoteSpeed = NoteSpeed;
 
 		// 1. Usa notas e áudio pré-carregados pelo LoadingScreen
 		//    Fallback: gera tudo aqui caso venha direto da cena (debug)
@@ -340,7 +341,8 @@ public partial class GameManager : Node3D
 			{
 				_lastRawAudioTime = rawTime;
 				double drift = rawTime - _songTime;
-				if (Math.Abs(drift) > 0.05)
+				// FIX C3: Sufixo 'd' explícito garante comparação double×double sem conversão implícita.
+				if (Math.Abs(drift) > 0.05d)
 					_songTime = rawTime;                   // drift > 50ms → snap
 				else
 					_songTime += drift * Math.Min(1.0, delta * 4.0); // correção suave (mais lenta para evitar saltos)
@@ -370,11 +372,13 @@ public partial class GameManager : Node3D
 		}
 
 		// Todos os spawns feitos + áudio encerrou → fim de música.
-		// Garante que EndSong é chamado mesmo que nem todas as notas
-		// tenham sido resolvidas (hit/miss) — evita notas infinitas.
+		// FIX C2: Adiciona buffer mínimo de 0.5s após o BeatTime da última nota
+		// antes de encerrar, evitando que notas no final da música sejam
+		// ignoradas por race condition com o fim do áudio.
+		double lastNoteCutoff = _noteList.Count > 0 ? _noteList[^1].Time + 0.5 : 0;
 		if (!_songEnded
 			&& _nextNoteIndex >= _noteList.Count
-			&& _songTime > 0
+			&& _songTime > lastNoteCutoff
 			&& (_audio == null || !_audio.Playing))
 		{
 			CallDeferred(nameof(EndSong));
@@ -383,6 +387,14 @@ public partial class GameManager : Node3D
 
 	private void SpawnNote(NoteData data)
 	{
+		// FIX M2: Valida o índice de lane antes de qualquer acesso a arrays,
+		// prevenindo IndexOutOfRangeException com charts corrompidos ou JSON inválido.
+		if (data.Lane < 0 || data.Lane >= 5)
+		{
+			GD.PushError($"[GameManager] Lane inválida ({data.Lane}) ignorada — verifique o chart.");
+			return;
+		}
+
 		var note = new Note
 		{
 			Lane     = data.Lane,
@@ -405,15 +417,27 @@ public partial class GameManager : Node3D
 		if (_songEnded) return;
 		_combo++;
 		_multiplier = _combo switch { >= 30 => 8, >= 20 => 4, >= 10 => 2, _ => 1 };
+		// FIX M6: Registra o maior combo da partida.
+		if (_combo > GameData.MaxCombo) GameData.MaxCombo = _combo;
 
 		float dist = Mathf.Abs(note.GlobalPosition.Z - Note.HitLineZ);
 		int baseScore;
 		string label;
 		Color  color;
 
-		// Timing windows (in seconds): PERFECT=25ms, GREAT=60ms, GOOD=90ms
-		float perfectThreshold = 0.025f * note.Speed;
-		float greatThreshold   = 0.06f  * note.Speed;
+		// FIX M3: Janelas de timing ajustadas por dificuldade.
+		// Easy/Medium têm janelas mais largas (mais permissivas), Expert mais estreitas.
+		float diffMult = GameData.SelectedDifficulty switch
+		{
+			"EasySingle"   => 1.5f,
+			"MediumSingle" => 1.2f,
+			"HardSingle"   => 1.0f,
+			"ExpertSingle" => 0.85f,
+			_              => 1.0f
+		};
+		// Timing windows base (segundos): PERFECT=25ms, GREAT=60ms — escalados por dificuldade
+		float perfectThreshold = 0.025f * note.Speed * diffMult;
+		float greatThreshold   = 0.06f  * note.Speed * diffMult;
 		// goodThreshold is implicit; anything <= goodThreshold is GOOD
 
 		if      (dist < perfectThreshold) { baseScore = 100; label = "PERFECT!"; color = Colors.Cyan;   }
@@ -437,6 +461,7 @@ public partial class GameManager : Node3D
 		if (_songEnded) return;
 		_combo++;
 		_multiplier = _combo switch { >= 30 => 8, >= 20 => 4, >= 10 => 2, _ => 1 };
+		if (_combo > GameData.MaxCombo) GameData.MaxCombo = _combo;
 		_score += 150 * _multiplier;
 
 		// NotesHit NÃO é incrementado aqui — já foi contado no OnNoteHit (tap).
@@ -467,6 +492,9 @@ public partial class GameManager : Node3D
 	private void SpawnFireEffect(int lane)
 	{
 		if (_hitParticles == null || lane < 0 || lane >= _hitParticles.Length) return;
+		// FIX H2: Verifica IsInstanceValid antes de acessar o nó de partículas,
+		// evitando NullReferenceException caso o nó tenha sido liberado.
+		if (!IsInstanceValid(_hitParticles[lane])) return;
 		_hitParticles[lane].Restart();
 	}
 

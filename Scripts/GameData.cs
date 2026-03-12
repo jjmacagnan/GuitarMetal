@@ -48,6 +48,8 @@ public static class GameData
     public static int NotesMissed   { get; set; }
     public static int HoldsComplete { get; set; }
     public static int TotalNotes    { get; set; }
+    /// <summary>Maior combo alcançado na partida (M6).</summary>
+    public static int MaxCombo      { get; set; }
 
     public static float Accuracy =>
         TotalNotes > 0 ? (float)NotesHit / TotalNotes * 100f : 0f;
@@ -68,6 +70,7 @@ public static class GameData
         NotesMissed   = 0;
         HoldsComplete = 0;
         TotalNotes    = 0;
+        MaxCombo      = 0;
     }
 
     public static void Reset()

@@ -262,6 +262,10 @@ public partial class LoadingScreen : Control
 		catch (System.Exception ex)
 		{
 			GD.PushError($"[Loading] Erro ao ler JSON: {ex.Message}");
+			// FIX M5: Propaga o erro para o usuário em vez de continuar silenciosamente
+			// com valores padrão, o que causaria chart incorreto sem aviso.
+			SetStatus($"Erro ao ler chart JSON:\n{ex.Message}\n[ESC para voltar]", 0);
+			_state = State.Error;
 		}
 	}
 
