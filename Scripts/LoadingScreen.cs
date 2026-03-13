@@ -178,10 +178,11 @@ public partial class LoadingScreen : Control
 				GameData.SelectedSongName = displayName;
 		}
 
-		// Prioridade: notes.chart (Clone Hero / Enchor) → [nome].chart → .json → procedural
+		// Prioridade: notes.chart → [nome].chart → .json → notes.mid → procedural
 		if (TryLoadDotChart(dir + "notes.chart", iniDelayMs)) return;
 		if (TryLoadDotChart(basePath + ".chart", iniDelayMs)) return;
-		TryLoadJson(basePath + ".json");
+		if (TryLoadJson(basePath + ".json")) return;
+		TryLoadMidi(dir + "notes.mid", iniDelayMs);
 	}
 
 	private bool TryLoadDotChart(string chartPath, float iniDelayMs = 0f)
@@ -223,12 +224,12 @@ public partial class LoadingScreen : Control
 		return true;
 	}
 
-	private void TryLoadJson(string jsonPath)
+	private bool TryLoadJson(string jsonPath)
 	{
 		if (!FileAccess.FileExists(jsonPath))
 		{
-			GD.Print($"[Loading] Sem chart para '{jsonPath}' — usando procedural");
-			return;
+			GD.Print($"[Loading] Sem chart JSON: '{jsonPath}'");
+			return false;
 		}
 
 		using var file = FileAccess.Open(jsonPath, FileAccess.ModeFlags.Read);
@@ -261,15 +262,54 @@ public partial class LoadingScreen : Control
 
 			GD.Print($"[Loading] JSON lido: BPM={_bpm}, offset={_startOffset}s" +
 					 (_chartNotes != null ? $", {_chartNotes.Count} notas" : ", procedural"));
+			return _chartNotes != null;
 		}
 		catch (System.Exception ex)
 		{
 			GD.PushError($"[Loading] Erro ao ler JSON: {ex.Message}");
-			// FIX M5: Propaga o erro para o usuário em vez de continuar silenciosamente
-			// com valores padrão, o que causaria chart incorreto sem aviso.
 			SetStatus($"Erro ao ler chart JSON:\n{ex.Message}\n[ESC para voltar]", 0);
 			_state = State.Error;
+			return false;
 		}
+	}
+
+	private bool TryLoadMidi(string midiPath, float iniDelayMs = 0f)
+	{
+		if (!FileAccess.FileExists(midiPath))
+		{
+			GD.Print($"[Loading] Sem MIDI: '{midiPath}' — usando procedural");
+			return false;
+		}
+
+		var imported = MidiImporter.Import(midiPath, GameData.SelectedDifficulty);
+		if (imported == null || imported.Notes.Count == 0)
+		{
+			GD.PushWarning($"[Loading] MIDI sem notas jogáveis: {midiPath}");
+			return false;
+		}
+
+		_bpm         = imported.BPM;
+		_startOffset = imported.StartOffset + iniDelayMs / 1000f;
+
+		if (!string.IsNullOrEmpty(imported.SongName) && imported.SongName != "thefinalcountdown")
+			GameData.SelectedSongName = imported.SongName;
+
+		_chartNotes = new List<NoteData>();
+		float offsetDiff = iniDelayMs / 1000f;
+
+		foreach (var nd in imported.Notes)
+		{
+			_chartNotes.Add(new NoteData
+			{
+				Time     = nd.Time + offsetDiff,
+				Lane     = nd.Lane,
+				IsLong   = nd.IsLong,
+				Duration = nd.Duration
+			});
+		}
+
+		GD.Print($"[Loading] MIDI carregado: {_chartNotes.Count} notas, BPM={_bpm:F1}, offset={_startOffset:F3}s");
+		return true;
 	}
 
 	private void SetStatus(string text, float progress)

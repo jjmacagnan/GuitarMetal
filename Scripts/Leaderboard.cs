@@ -155,7 +155,7 @@ public partial class Leaderboard : Control
 		};
 	}
 
-	// ── Scanner simplificado (só nomes) ────────────────────────────────
+	// ── Scanner de nomes (mesma lógica do SongSelectMenu) ──────────────
 
 	private static List<string> FindAllSongNames(string baseDir)
 	{
@@ -171,8 +171,15 @@ public partial class Leaderboard : Control
 			{
 				string dir = baseDir.TrimEnd('/') + "/" + entry + "/";
 
-				// Resolve o nome exatamente como LoadingScreen faz:
-				// 1) song.ini → displayName
+				// Só lista se a pasta tiver áudio reconhecido (mesma lógica do SongSelectMenu)
+				if (!FolderHasAudio(dir))
+				{
+					entry = access.GetNext();
+					continue;
+				}
+
+				// Resolve o nome exatamente como SongSelectMenu + LoadingScreen:
+				// 1) song.ini → "Artista - Nome"
 				// 2) notes.chart → SongName (sobrescreve se existir)
 				string displayName = entry;
 				string iniPath = dir + "song.ini";
@@ -183,7 +190,6 @@ public partial class Leaderboard : Control
 					if (!string.IsNullOrEmpty(iniName)) displayName = iniName;
 				}
 
-				// Checa .chart para SongName (mesma prioridade do LoadingScreen)
 				string chartPath = dir + "notes.chart";
 				if (FileAccess.FileExists(chartPath))
 				{
@@ -211,5 +217,34 @@ public partial class Leaderboard : Control
 		}
 		access.ListDirEnd();
 		return result;
+	}
+
+	/// <summary>Verifica se a pasta tem pelo menos um arquivo de áudio reconhecido.</summary>
+	private static bool FolderHasAudio(string dir)
+	{
+		foreach (var candidate in FolderAudioCandidates)
+		{
+			if (FileAccess.FileExists(dir + candidate)) return true;
+		}
+
+		var access = DirAccess.Open(dir);
+		if (access == null) return false;
+
+		access.ListDirBegin();
+		string entry = access.GetNext();
+		while (entry != "")
+		{
+			if (!access.CurrentIsDir())
+			{
+				string lower = entry.ToLower();
+				foreach (var ext in LooseAudioExtensions)
+				{
+					if (lower.EndsWith(ext)) { access.ListDirEnd(); return true; }
+				}
+			}
+			entry = access.GetNext();
+		}
+		access.ListDirEnd();
+		return false;
 	}
 }
