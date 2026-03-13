@@ -1,4 +1,5 @@
 using Godot;
+using System;
 
 /// <summary>
 /// Tela de entrada de nome do jogador com teclado virtual navegável por joystick.
@@ -14,6 +15,12 @@ public partial class NameInput : Control
 	private const int Columns = 10;
 	private bool _capsOn = true;
 	private readonly System.Collections.Generic.List<Button> _letterButtons = new();
+	
+	// Cursor para editar texto com teclado físico
+	private int _cursorPos = 0;
+
+	// Botão de caps do teclado virtual (para sincronização)
+	private Button _capsButton;
 
 	// Layout QWERTY + números + ações
 	private static readonly string[][] KeyRows = new[]
@@ -49,6 +56,8 @@ public partial class NameInput : Control
 			if (!string.IsNullOrEmpty(lastName))
 				_nameEdit.Text = lastName;
 
+			// Inicializa cursor no fim do texto existente
+			_cursorPos = _nameEdit.Text?.Length ?? 0;
 			_nameEdit.TextSubmitted += (_) => OnConfirm();
 		}
 
@@ -61,6 +70,98 @@ public partial class NameInput : Control
 		{
 			GetTree().ChangeSceneToFile("res://Scenes/MainMenu.tscn");
 			GetViewport().SetInputAsHandled();
+			return;
+		}
+
+		if (@event is InputEventKey ev)
+		{
+			// Key pressed (no repeats)
+			if (ev.Pressed && !ev.Echo)
+			{
+				// Backspace
+				if (ev.Keycode == Key.Backspace)
+				{
+					OnBackspace();
+					GetViewport().SetInputAsHandled();
+					return;
+				}
+
+				// Confirm
+				if (ev.Keycode == Key.Enter)
+				{
+					OnConfirm();
+					GetViewport().SetInputAsHandled();
+					return;
+				}
+
+
+				// Delete
+				if (ev.Keycode == Key.Delete)
+				{
+					OnDelete();
+					GetViewport().SetInputAsHandled();
+					return;
+				}
+
+				// Cursor movement
+				if (ev.Keycode == Key.Left)
+				{
+					MoveCursor(-1);
+					GetViewport().SetInputAsHandled();
+					return;
+				}
+
+				if (ev.Keycode == Key.Right)
+				{
+					MoveCursor(1);
+					GetViewport().SetInputAsHandled();
+					return;
+				}
+
+				if (ev.Keycode == Key.Home)
+				{
+					SetCursor(0);
+					GetViewport().SetInputAsHandled();
+					return;
+				}
+
+				if (ev.Keycode == Key.End)
+				{
+					SetCursor(_nameEdit?.Text?.Length ?? 0);
+					GetViewport().SetInputAsHandled();
+					return;
+				}
+
+					// Printable characters: use Unicode and apply virtual CapsLock/Shift logic for letters
+				if (ev.Unicode != 0)
+				{
+					string raw = char.ConvertFromUtf32((int)ev.Unicode);
+					if (raw.Length == 1 && char.IsLetter(raw[0]))
+					{
+						// If user typed a letter without Shift, infer physical CapsLock state and sync visual if changed
+						if (!ev.ShiftPressed)
+						{
+							bool inferredCaps = char.IsUpper(raw[0]);
+							if (inferredCaps != _capsOn)
+							{
+								_capsOn = inferredCaps;
+								UpdateCapsVisual();
+							}
+						}
+						bool shift = ev.ShiftPressed;
+						bool upper = _capsOn ^ shift; // XOR: CapsLock inverts Shift
+						char baseLower = char.ToLower(raw[0]);
+						string outCh = upper ? baseLower.ToString().ToUpper() : baseLower.ToString();
+						TypeChar(outCh);
+					}
+					else
+					{
+						TypeChar(raw);
+					}
+					GetViewport().SetInputAsHandled();
+					return;
+				}
+			}
 		}
 	}
 
@@ -107,6 +208,7 @@ public partial class NameInput : Control
 
 		var capsBtn = CreateKeyButton("⇧ Aa", 80, 48);
 		capsBtn.Pressed += () => ToggleCaps(capsBtn);
+		_capsButton = capsBtn;
 
 		var spaceBtn = CreateKeyButton(Locale.Tr("KB_SPACE"), 160, 48);
 		spaceBtn.Pressed += () => TypeChar(" ");
@@ -147,22 +249,60 @@ public partial class NameInput : Control
 	private void TypeChar(string ch)
 	{
 		if (_nameEdit == null) return;
-		if (_nameEdit.Text.Length >= _nameEdit.MaxLength) return;
-		_nameEdit.Text += ch;
+		string current = _nameEdit.Text ?? "";
+		if (current.Length >= _nameEdit.MaxLength) return;
+
+		// Insert at cursor position
+		int insertPos = Math.Clamp(_cursorPos, 0, current.Length);
+		int allowed = Math.Min(ch.Length, _nameEdit.MaxLength - current.Length);
+		string toInsert = ch.Length <= allowed ? ch : ch.Substring(0, allowed);
+		_nameEdit.Text = current.Insert(insertPos, toInsert);
+		_cursorPos = insertPos + toInsert.Length;
 	}
 
 	private void ToggleCaps(Button capsBtn)
 	{
 		_capsOn = !_capsOn;
-		capsBtn.Text = _capsOn ? "⇧ Aa" : "⇩ aA";
+		UpdateCapsVisual();
+	}
+
+	private void UpdateCapsVisual()
+	{
+		if (_capsButton != null)
+			_capsButton.Text = _capsOn ? "⇧ Aa" : "⇩ aA";
 		foreach (var btn in _letterButtons)
 			btn.Text = _capsOn ? btn.Text.ToUpper() : btn.Text.ToLower();
 	}
 
+	private void MoveCursor(int delta)
+	{
+		if (_nameEdit == null) return;
+		int len = _nameEdit.Text?.Length ?? 0;
+		_cursorPos = Math.Clamp(_cursorPos + delta, 0, len);
+	}
+
+	private void SetCursor(int pos)
+	{
+		if (_nameEdit == null) return;
+		_cursorPos = Math.Clamp(pos, 0, _nameEdit.Text?.Length ?? 0);
+	}
+
+	private void OnDelete()
+	{
+		if (_nameEdit == null) return;
+		int len = _nameEdit.Text?.Length ?? 0;
+		if (_cursorPos >= len) return;
+		_nameEdit.Text = _nameEdit.Text.Remove(_cursorPos, 1);
+	}
+
 	private void OnBackspace()
 	{
-		if (_nameEdit == null || _nameEdit.Text.Length == 0) return;
-		_nameEdit.Text = _nameEdit.Text[..^1];
+		if (_nameEdit == null) return;
+		if (_cursorPos > 0)
+		{
+			_nameEdit.Text = _nameEdit.Text.Remove(_cursorPos - 1, 1);
+			_cursorPos--;
+		}
 	}
 
 	private void OnClear()
