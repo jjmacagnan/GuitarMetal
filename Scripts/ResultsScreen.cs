@@ -7,6 +7,10 @@ public partial class ResultsScreen : Control
         // Título
         SetLabel("VBox/TitleLabel", Locale.Tr("RESULT"));
 
+        // Nome do jogador
+        if (!string.IsNullOrEmpty(GameData.PlayerName))
+            SetLabel("VBox/PlayerLabel", Locale.Tr("PLAYER_FMT", GameData.PlayerName));
+
         SetLabel("VBox/GradeLabel",    GameData.Grade);
         SetLabel("VBox/ScoreLabel",    Locale.Tr("SCORE_FMT", $"{GameData.Score:N0}"));
         SetLabel("VBox/AccLabel",      Locale.Tr("ACCURACY_FMT", $"{GameData.Accuracy:F1}"));
@@ -49,6 +53,9 @@ public partial class ResultsScreen : Control
 
         // Foca o botão "Jogar Novamente" para navegação por controle
         playAgain?.CallDeferred(Control.MethodName.GrabFocus);
+
+        // Salva score no leaderboard
+        SaveScore();
     }
 
     public override void _UnhandledInput(InputEvent @event)
@@ -59,6 +66,25 @@ public partial class ResultsScreen : Control
             GetTree().ChangeSceneToFile("res://Scenes/MainMenu.tscn");
             GetViewport().SetInputAsHandled();
         }
+    }
+
+    private void SaveScore()
+    {
+        if (string.IsNullOrEmpty(GameData.SelectedSongName)) return;
+
+        var entry = new ScoreStorage.ScoreEntry
+        {
+            PlayerName = GameData.PlayerName,
+            Score      = GameData.Score,
+            Accuracy   = GameData.Accuracy,
+            Grade      = GameData.Grade,
+            MaxCombo   = GameData.MaxCombo,
+            Difficulty = GameData.SelectedDifficulty ?? "",
+            Date       = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm")
+        };
+
+        ScoreStorage.Save(GameData.SelectedSongName, entry);
+        GD.Print($"[Results] Score salvo: {entry.PlayerName} - {entry.Score} ({entry.Grade})");
     }
 
     private void SetLabel(string path, string text)

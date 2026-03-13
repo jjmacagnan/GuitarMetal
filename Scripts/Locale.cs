@@ -94,5 +94,23 @@ public static class Locale
         ["MAX_COMBO_FMT"]   = new() { [Language.PT] = "Max Combo: {0}x",      [Language.EN] = "Max Combo: {0}x" },
         ["PLAY_AGAIN"]      = new() { [Language.PT] = "JOGAR NOVAMENTE",      [Language.EN] = "PLAY AGAIN" },
         ["MAIN_MENU"]       = new() { [Language.PT] = "Menu Principal",       [Language.EN] = "Main Menu" },
+
+        // ── Nome do jogador ────────────────────────────────────────────
+        ["ENTER_NAME"]      = new() { [Language.PT] = "DIGITE SEU NOME",     [Language.EN] = "ENTER YOUR NAME" },
+        ["CONFIRM"]         = new() { [Language.PT] = "Confirmar",           [Language.EN] = "Confirm" },
+        ["NAME_PLACEHOLDER"]= new() { [Language.PT] = "Seu nome...",          [Language.EN] = "Your name..." },
+        ["PLAYER_FMT"]      = new() { [Language.PT] = "Jogador: {0}",        [Language.EN] = "Player: {0}" },
+
+        // ── Leaderboard ────────────────────────────────────────────────
+        ["LEADERBOARD"]     = new() { [Language.PT] = "RANKING",             [Language.EN] = "LEADERBOARD" },
+        ["RANK"]            = new() { [Language.PT] = "#",                   [Language.EN] = "#" },
+        ["PLAYER"]          = new() { [Language.PT] = "Jogador",             [Language.EN] = "Player" },
+        ["NO_SCORES"]       = new() { [Language.PT] = "Nenhum score registrado.", [Language.EN] = "No scores recorded." },
+        ["SELECT_SONG_LB"]  = new() { [Language.PT] = "Selecione uma música para ver o ranking", [Language.EN] = "Select a song to view the ranking" },
+
+        // ── Teclado virtual ──────────────────────────────────────────
+        ["KB_SPACE"]        = new() { [Language.PT] = "ESPAÇO",              [Language.EN] = "SPACE" },
+        ["KB_BACKSPACE"]    = new() { [Language.PT] = "APAGAR",              [Language.EN] = "DELETE" },
+        ["KB_CLEAR"]        = new() { [Language.PT] = "LIMPAR",              [Language.EN] = "CLEAR" },
     };
 }
