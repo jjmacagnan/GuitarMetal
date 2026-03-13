@@ -1,0 +1,84 @@
+[gd_scene format=3 uid="uid://leaderboard_scene"]
+
+[ext_resource type="Script" path="res://Scripts/Leaderboard.cs" id="1_lb"]
+
+[node name="Leaderboard" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_lb")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.04, 0.04, 0.12, 1)
+
+[node name="VBox" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 40.0
+offset_top = 20.0
+offset_right = -40.0
+offset_bottom = -20.0
+theme_override_constants/separation = 12
+
+[node name="TitleLabel" type="Label" parent="VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 0.9, 1, 1)
+theme_override_font_sizes/font_size = 38
+text = "RANKING"
+horizontal_alignment = 1
+
+[node name="HSplit" type="HSplitContainer" parent="VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+split_offset = 320
+
+[node name="SongScroll" type="ScrollContainer" parent="VBox/HSplit"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SongList" type="VBoxContainer" parent="VBox/HSplit/SongScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="ScorePanel" type="VBoxContainer" parent="VBox/HSplit"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 2.0
+theme_override_constants/separation = 8
+
+[node name="ScoreTitle" type="Label" parent="VBox/HSplit/ScorePanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0, 1)
+theme_override_font_sizes/font_size = 24
+text = ""
+horizontal_alignment = 1
+
+[node name="HintLabel" type="Label" parent="VBox/HSplit/ScorePanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.5, 0.6, 1)
+theme_override_font_sizes/font_size = 18
+text = "Selecione uma música para ver o ranking"
+horizontal_alignment = 1
+
+[node name="ScoreScroll" type="ScrollContainer" parent="VBox/HSplit/ScorePanel"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ScoreList" type="VBoxContainer" parent="VBox/HSplit/ScorePanel/ScoreScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="BackButton" type="Button" parent="VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 48)
+theme_override_font_sizes/font_size = 20
+text = "← Voltar"

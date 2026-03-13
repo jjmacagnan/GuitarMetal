@@ -6,15 +6,17 @@ public partial class MainMenu : Control
 	private Button _playButton;
 	private Button _quitButton;
 	private Button _langButton;
+	private Button _leaderboardButton;
 	private Label  _controlsLabel;
 
 	public override void _Ready()
 	{
-		_titleLabel    = GetNodeOrNull<Label>("VBox/TitleLabel");
-		_playButton    = GetNodeOrNull<Button>("VBox/PlayButton");
-		_quitButton    = GetNodeOrNull<Button>("VBox/QuitButton");
-		_langButton    = GetNodeOrNull<Button>("VBox/LanguageButton");
-		_controlsLabel = GetNodeOrNull<Label>("ControlsLabel");
+		_titleLabel        = GetNodeOrNull<Label>("VBox/TitleLabel");
+		_playButton        = GetNodeOrNull<Button>("VBox/PlayButton");
+		_quitButton        = GetNodeOrNull<Button>("VBox/QuitButton");
+		_langButton        = GetNodeOrNull<Button>("VBox/LanguageButton");
+		_leaderboardButton = GetNodeOrNull<Button>("VBox/LeaderboardButton");
+		_controlsLabel     = GetNodeOrNull<Label>("ControlsLabel");
 
 		if (_playButton != null) _playButton.Pressed += OnPlayPressed;
 		else GD.PushError("[MainMenu] PlayButton não encontrado!");
@@ -23,6 +25,7 @@ public partial class MainMenu : Control
 		else GD.PushError("[MainMenu] QuitButton não encontrado!");
 
 		if (_langButton != null) _langButton.Pressed += OnLanguageToggle;
+		if (_leaderboardButton != null) _leaderboardButton.Pressed += OnLeaderboardPressed;
 
 		// Foca Play ao entrar para navegação por controle
 		_playButton?.CallDeferred(Control.MethodName.GrabFocus);
@@ -40,8 +43,9 @@ public partial class MainMenu : Control
 		}
 	}
 
-	private void OnPlayPressed() => GetTree().ChangeSceneToFile("res://Scenes/SongSelect.tscn");
+	private void OnPlayPressed() => GetTree().ChangeSceneToFile("res://Scenes/NameInput.tscn");
 	private void OnQuitPressed() => GetTree().Quit();
+	private void OnLeaderboardPressed() => GetTree().ChangeSceneToFile("res://Scenes/Leaderboard.tscn");
 
 	private void OnLanguageToggle()
 	{
@@ -53,10 +57,11 @@ public partial class MainMenu : Control
 
 	private void ApplyLocale()
 	{
-		if (_titleLabel    != null) _titleLabel.Text    = Locale.Tr("TITLE");
-		if (_playButton    != null) _playButton.Text    = Locale.Tr("PLAY");
-		if (_quitButton    != null) _quitButton.Text    = Locale.Tr("QUIT");
-		if (_langButton    != null) _langButton.Text    = Locale.Tr("LANGUAGE");
-		if (_controlsLabel != null) _controlsLabel.Text = Locale.Tr("CONTROLS_HINT");
+		if (_titleLabel        != null) _titleLabel.Text        = Locale.Tr("TITLE");
+		if (_playButton        != null) _playButton.Text        = Locale.Tr("PLAY");
+		if (_quitButton        != null) _quitButton.Text        = Locale.Tr("QUIT");
+		if (_langButton        != null) _langButton.Text        = Locale.Tr("LANGUAGE");
+		if (_leaderboardButton != null) _leaderboardButton.Text = Locale.Tr("LEADERBOARD");
+		if (_controlsLabel     != null) _controlsLabel.Text     = Locale.Tr("CONTROLS_HINT");
 	}
 }

@@ -33,6 +33,9 @@ public static class GameData
     public static AudioStream LoadedStream     { get; set; } = null;
     public static float       LoadedBPM        { get; set; } = 128f;
 
+    // ── Jogador ──────────────────────────────────────────────────────────
+    public static string PlayerName { get; set; } = "";
+
     // ── Opções ──────────────────────────────────────────────────────────
     /// <summary>Se true, toca SFX ao pressionar tecla sem nota na janela de acerto.</summary>
     public static bool MissSfxEnabled { get; set; } = true;
