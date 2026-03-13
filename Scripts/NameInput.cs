@@ -12,6 +12,8 @@ public partial class NameInput : Control
 	// Teclado virtual
 	private GridContainer _keyboardGrid;
 	private const int Columns = 10;
+	private bool _capsOn = true;
+	private readonly System.Collections.Generic.List<Button> _letterButtons = new();
 
 	// Layout QWERTY + números + ações
 	private static readonly string[][] KeyRows = new[]
@@ -87,10 +89,13 @@ public partial class NameInput : Control
 
 			foreach (string key in row)
 			{
+				bool isLetter = char.IsLetter(key[0]);
 				var btn = CreateKeyButton(key, 48, 48);
-				btn.Pressed += () => TypeChar(key);
+				string capturedKey = key;
+				btn.Pressed += () => TypeChar(isLetter ? (_capsOn ? capturedKey : capturedKey.ToLower()) : capturedKey);
 				hbox.AddChild(btn);
 				firstKey ??= btn;
+				if (isLetter) _letterButtons.Add(btn);
 			}
 			kbContainer.AddChild(hbox);
 		}
@@ -100,7 +105,10 @@ public partial class NameInput : Control
 		actionRow.AddThemeConstantOverride("separation", 4);
 		actionRow.Alignment = BoxContainer.AlignmentMode.Center;
 
-		var spaceBtn = CreateKeyButton(Locale.Tr("KB_SPACE"), 200, 48);
+		var capsBtn = CreateKeyButton("⇧ Aa", 80, 48);
+		capsBtn.Pressed += () => ToggleCaps(capsBtn);
+
+		var spaceBtn = CreateKeyButton(Locale.Tr("KB_SPACE"), 160, 48);
 		spaceBtn.Pressed += () => TypeChar(" ");
 
 		var backBtn = CreateKeyButton(Locale.Tr("KB_BACKSPACE"), 120, 48);
@@ -109,6 +117,7 @@ public partial class NameInput : Control
 		var clearBtn = CreateKeyButton(Locale.Tr("KB_CLEAR"), 100, 48);
 		clearBtn.Pressed += OnClear;
 
+		actionRow.AddChild(capsBtn);
 		actionRow.AddChild(spaceBtn);
 		actionRow.AddChild(backBtn);
 		actionRow.AddChild(clearBtn);
@@ -140,6 +149,14 @@ public partial class NameInput : Control
 		if (_nameEdit == null) return;
 		if (_nameEdit.Text.Length >= _nameEdit.MaxLength) return;
 		_nameEdit.Text += ch;
+	}
+
+	private void ToggleCaps(Button capsBtn)
+	{
+		_capsOn = !_capsOn;
+		capsBtn.Text = _capsOn ? "⇧ Aa" : "⇩ aA";
+		foreach (var btn in _letterButtons)
+			btn.Text = _capsOn ? btn.Text.ToUpper() : btn.Text.ToLower();
 	}
 
 	private void OnBackspace()
