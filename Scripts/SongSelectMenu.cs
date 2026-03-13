@@ -171,12 +171,19 @@ public partial class SongSelectMenu : Control
         string dir      = DirOf(audioPath);
         string basePath = StripExt(audioPath);
 
-        // Procura chart: notes.chart (pasta Clone Hero) → [nome].chart (formato legado)
+        // Procura chart: notes.chart → [nome].chart → notes.mid
         string chartPath = FileAccess.FileExists(dir + "notes.chart")
             ? dir + "notes.chart"
             : basePath + ".chart";
 
         var difficulties = ChartImporter.ScanDifficulties(chartPath);
+
+        // Fallback: tenta notes.mid (formato Rock Band / Harmonix)
+        if (difficulties.Count == 0)
+        {
+            string midiPath = dir + "notes.mid";
+            difficulties = MidiImporter.ScanDifficulties(midiPath);
+        }
 
         if (difficulties.Count > 1)
         {
