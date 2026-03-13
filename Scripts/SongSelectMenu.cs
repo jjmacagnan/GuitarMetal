@@ -15,11 +15,14 @@ using System.Collections.Generic;
 /// </summary>
 public partial class SongSelectMenu : Control
 {
-    private VBoxContainer _songList;
-    private Label         _previewLabel;
-    private CheckBox      _missSfxCheck;
-    private Label         _titleLabel;
-    private Button        _backButton;
+    private VBoxContainer   _songList;
+    private ScrollContainer _scrollContainer;
+    private Label           _previewLabel;
+    private CheckBox        _missSfxCheck;
+    private Label           _titleLabel;
+    private Button          _backButton;
+
+    private readonly List<Button> _songButtons = new();
 
     // Extensões de áudio reconhecidas (em ordem de prioridade dentro de uma pasta)
     // .opus NÃO está na lista — Godot 4 não suporta o formato Opus.
@@ -32,10 +35,11 @@ public partial class SongSelectMenu : Control
 
     public override void _Ready()
     {
-        _songList     = GetNodeOrNull<VBoxContainer>("VBox/ScrollContainer/SongList");
-        _previewLabel = GetNodeOrNull<Label>("VBox/PreviewLabel");
-        _titleLabel   = GetNodeOrNull<Label>("VBox/TitleLabel");
-        _backButton   = GetNodeOrNull<Button>("VBox/BackButton");
+        _songList        = GetNodeOrNull<VBoxContainer>("VBox/ScrollContainer/SongList");
+        _scrollContainer = GetNodeOrNull<ScrollContainer>("VBox/ScrollContainer");
+        _previewLabel    = GetNodeOrNull<Label>("VBox/PreviewLabel");
+        _titleLabel      = GetNodeOrNull<Label>("VBox/TitleLabel");
+        _backButton      = GetNodeOrNull<Button>("VBox/BackButton");
 
         _backButton?.Connect("pressed", Callable.From(() => GetTree().ChangeSceneToFile("res://Scenes/MainMenu.tscn")));
 
@@ -81,7 +85,8 @@ public partial class SongSelectMenu : Control
             return;
         }
 
-        Button firstBtn = null;
+        _songButtons.Clear();
+
         foreach (var (path, name) in songs)
         {
             string capturedPath = path;
@@ -96,11 +101,59 @@ public partial class SongSelectMenu : Control
             btn.AddThemeFontSizeOverride("font_size", 22);
             btn.Pressed += () => OnSongSelected(capturedPath, capturedName);
 
+            // Auto-scroll ao receber foco (funciona com D-pad e analógico)
+            btn.FocusEntered += () =>
+            {
+                _scrollContainer?.EnsureControlVisible(btn);
+            };
+
             _songList.AddChild(btn);
-            firstBtn ??= btn;
+            _songButtons.Add(btn);
         }
 
-        firstBtn?.CallDeferred(Control.MethodName.GrabFocus);
+        // Configura vizinhos de foco para que a navegação percorra todos os
+        // botões dentro do ScrollContainer antes de sair para MissSfxCheck/BackButton
+        CallDeferred(MethodName.SetupFocusNeighbors);
+
+        if (_songButtons.Count > 0)
+            _songButtons[0].CallDeferred(Control.MethodName.GrabFocus);
+    }
+
+    /// <summary>
+    /// Configura FocusNeighborBottom/Top de cada botão para que a navegação
+    /// por D-pad/analógico percorra toda a lista antes de sair do ScrollContainer.
+    /// O último botão aponta para MissSfxCheck; MissSfxCheck aponta de volta
+    /// para o último botão ao subir.
+    /// </summary>
+    private void SetupFocusNeighbors()
+    {
+        for (int i = 0; i < _songButtons.Count; i++)
+        {
+            var btn = _songButtons[i];
+
+            // Vizinho de cima: botão anterior (primeiro botão não define → mantém padrão)
+            if (i > 0)
+                btn.FocusNeighborTop = _songButtons[i - 1].GetPath();
+
+            // Vizinho de baixo: próximo botão na lista
+            if (i < _songButtons.Count - 1)
+                btn.FocusNeighborBottom = _songButtons[i + 1].GetPath();
+        }
+
+        // Último botão → MissSfxCheck (se existir) ou BackButton
+        if (_songButtons.Count > 0)
+        {
+            var lastBtn = _songButtons[^1];
+            if (_missSfxCheck != null)
+            {
+                lastBtn.FocusNeighborBottom      = _missSfxCheck.GetPath();
+                _missSfxCheck.FocusNeighborTop    = lastBtn.GetPath();
+            }
+            else if (_backButton != null)
+            {
+                lastBtn.FocusNeighborBottom = _backButton.GetPath();
+            }
+        }
     }
 
     // ── Seleção ────────────────────────────────────────────────────────────
