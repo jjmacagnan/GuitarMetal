@@ -23,24 +23,24 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -220.0
-offset_top = -120.0
-offset_right = 220.0
-offset_bottom = 120.0
+offset_left = -280.0
+offset_top = -260.0
+offset_right = 280.0
+offset_bottom = 260.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 24
+theme_override_constants/separation = 16
 
 [node name="TitleLabel" type="Label" parent="VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.2, 0.9, 1, 1)
-theme_override_font_sizes/font_size = 38
+theme_override_font_sizes/font_size = 34
 text = "DIGITE SEU NOME"
 horizontal_alignment = 1
 
 [node name="NameEdit" type="LineEdit" parent="VBox"]
 layout_mode = 2
-custom_minimum_size = Vector2(0, 52)
+custom_minimum_size = Vector2(0, 48)
 theme_override_font_sizes/font_size = 24
 placeholder_text = "Seu nome..."
 alignment = 1

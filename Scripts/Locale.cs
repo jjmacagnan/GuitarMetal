@@ -107,5 +107,10 @@ public static class Locale
         ["PLAYER"]          = new() { [Language.PT] = "Jogador",             [Language.EN] = "Player" },
         ["NO_SCORES"]       = new() { [Language.PT] = "Nenhum score registrado.", [Language.EN] = "No scores recorded." },
         ["SELECT_SONG_LB"]  = new() { [Language.PT] = "Selecione uma música para ver o ranking", [Language.EN] = "Select a song to view the ranking" },
+
+        // ── Teclado virtual ──────────────────────────────────────────
+        ["KB_SPACE"]        = new() { [Language.PT] = "ESPAÇO",              [Language.EN] = "SPACE" },
+        ["KB_BACKSPACE"]    = new() { [Language.PT] = "APAGAR",              [Language.EN] = "DELETE" },
+        ["KB_CLEAR"]        = new() { [Language.PT] = "LIMPAR",              [Language.EN] = "CLEAR" },
     };
 }
