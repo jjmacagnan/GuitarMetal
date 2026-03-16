@@ -101,6 +101,12 @@ custom_minimum_size = Vector2(0, 56)
 theme_override_font_sizes/font_size = 26
 text = "JOGAR NOVAMENTE"
 
+[node name="LeaderboardButton" type="Button" parent="VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 46)
+theme_override_font_sizes/font_size = 22
+text = "Ver Placar"
+
 [node name="MenuButton" type="Button" parent="VBox"]
 layout_mode = 2
 custom_minimum_size = Vector2(0, 46)

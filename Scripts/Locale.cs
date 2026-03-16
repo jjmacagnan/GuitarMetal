@@ -92,8 +92,9 @@ public static class Locale
         ["MISSES_FMT"]      = new() { [Language.PT] = "Erros: {0}",           [Language.EN] = "Misses: {0}" },
         ["HOLDS_FMT"]       = new() { [Language.PT] = "Holds completos: {0}", [Language.EN] = "Holds completed: {0}" },
         ["MAX_COMBO_FMT"]   = new() { [Language.PT] = "Max Combo: {0}x",      [Language.EN] = "Max Combo: {0}x" },
-        ["PLAY_AGAIN"]      = new() { [Language.PT] = "JOGAR NOVAMENTE",      [Language.EN] = "PLAY AGAIN" },
-        ["MAIN_MENU"]       = new() { [Language.PT] = "Menu Principal",       [Language.EN] = "Main Menu" },
+        ["PLAY_AGAIN"]        = new() { [Language.PT] = "JOGAR NOVAMENTE",    [Language.EN] = "PLAY AGAIN" },
+        ["VIEW_LEADERBOARD"]  = new() { [Language.PT] = "Ver Placar",         [Language.EN] = "View Leaderboard" },
+        ["MAIN_MENU"]         = new() { [Language.PT] = "Menu Principal",     [Language.EN] = "Main Menu" },
 
         // ── Nome do jogador ────────────────────────────────────────────
         ["ENTER_NAME"]      = new() { [Language.PT] = "DIGITE SEU NOME",     [Language.EN] = "ENTER YOUR NAME" },

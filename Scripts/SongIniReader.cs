@@ -56,6 +56,7 @@ public static class SongIniReader
     public static string BuildDisplayName(SongInfo info, string fallback)
     {
         if (string.IsNullOrEmpty(info.Name)) return fallback;
-        return string.IsNullOrEmpty(info.Artist) ? info.Name : $"{info.Artist} - {info.Name}";
+        // Se não há artista, usa o nome da pasta (fallback) que já pode ter "Artista - Título"
+        return string.IsNullOrEmpty(info.Artist) ? fallback : $"{info.Artist} - {info.Name}";
     }
 }
