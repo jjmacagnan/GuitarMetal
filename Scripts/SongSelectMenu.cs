@@ -21,6 +21,7 @@ public partial class SongSelectMenu : Control
     private CheckBox        _missSfxCheck;
     private Label           _titleLabel;
     private Button          _backButton;
+    private AudioStreamPlayer _previewPlayer;
 
     private readonly List<Button> _songButtons = new();
 
@@ -42,6 +43,9 @@ public partial class SongSelectMenu : Control
         _backButton      = GetNodeOrNull<Button>("VBox/BackButton");
 
         _backButton?.Connect("pressed", Callable.From(() => GetTree().ChangeSceneToFile("res://Scenes/MainMenu.tscn")));
+
+        _previewPlayer = new AudioStreamPlayer { VolumeDb = -8f };
+        AddChild(_previewPlayer);
 
         _missSfxCheck = GetNodeOrNull<CheckBox>("VBox/MissSfxCheck");
         if (_missSfxCheck != null)
@@ -101,10 +105,11 @@ public partial class SongSelectMenu : Control
             btn.AddThemeFontSizeOverride("font_size", 22);
             btn.Pressed += () => OnSongSelected(capturedPath, capturedName);
 
-            // Auto-scroll ao receber foco (funciona com D-pad e analógico)
+            // Auto-scroll e preview de áudio ao receber foco
             btn.FocusEntered += () =>
             {
                 _scrollContainer?.EnsureControlVisible(btn);
+                PlayPreview(capturedPath);
             };
 
             _songList.AddChild(btn);
@@ -195,6 +200,16 @@ public partial class SongSelectMenu : Control
             if (difficulties.Count == 1) GameData.SelectedDifficulty = difficulties[0];
             GetTree().ChangeSceneToFile("res://Scenes/Loading.tscn");
         }
+    }
+
+    // ── Preview de áudio ───────────────────────────────────────────────────
+
+    private void PlayPreview(string audioPath)
+    {
+        var stream = ResourceLoader.Load<AudioStream>(audioPath);
+        if (stream == null) return;
+        _previewPlayer.Stream = stream;
+        _previewPlayer.Play();
     }
 
     // ── Scanner ────────────────────────────────────────────────────────────

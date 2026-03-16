@@ -34,8 +34,9 @@ public partial class ResultsScreen : Control
             gradeLabel.AddThemeColorOverride("font_color", c);
         }
 
-        var playAgain = GetNodeOrNull<Button>("VBox/PlayAgainButton");
-        var menu      = GetNodeOrNull<Button>("VBox/MenuButton");
+        var playAgain    = GetNodeOrNull<Button>("VBox/PlayAgainButton");
+        var leaderboard  = GetNodeOrNull<Button>("VBox/LeaderboardButton");
+        var menu         = GetNodeOrNull<Button>("VBox/MenuButton");
 
         if (playAgain != null)
         {
@@ -43,6 +44,13 @@ public partial class ResultsScreen : Control
             playAgain.Pressed += () => GetTree().ChangeSceneToFile("res://Scenes/SongSelect.tscn");
         }
         else GD.PushError("[ResultsScreen] PlayAgainButton não encontrado!");
+
+        if (leaderboard != null)
+        {
+            leaderboard.Text = Locale.Tr("VIEW_LEADERBOARD");
+            leaderboard.Pressed += () => GetTree().ChangeSceneToFile("res://Scenes/Leaderboard.tscn");
+        }
+        else GD.PushError("[ResultsScreen] LeaderboardButton não encontrado!");
 
         if (menu != null)
         {
