@@ -1,0 +1,181 @@
+[gd_scene format=3 uid="uid://credits_scene"]
+
+[ext_resource type="Script" path="res://Scripts/Credits.cs" id="1_credits"]
+
+[node name="Credits" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_credits")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.04, 0.04, 0.12, 1)
+
+[node name="VBox" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 60.0
+offset_top = 24.0
+offset_right = -60.0
+offset_bottom = -24.0
+theme_override_constants/separation = 16
+
+[node name="TitleLabel" type="Label" parent="VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 0.9, 1, 1)
+theme_override_font_sizes/font_size = 38
+text = "CRÉDITOS E LICENÇA"
+horizontal_alignment = 1
+
+[node name="Scroll" type="ScrollContainer" parent="VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Content" type="VBoxContainer" parent="VBox/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="AboutTitleLabel" type="Label" parent="VBox/Scroll/Content"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0, 1)
+theme_override_font_sizes/font_size = 22
+text = "SOBRE O PROJETO"
+
+[node name="AboutTextLabel" type="Label" parent="VBox/Scroll/Content"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.85, 0.95, 1)
+theme_override_font_sizes/font_size = 17
+autowrap_mode = 2
+text = ""
+
+[node name="Sep1" type="HSeparator" parent="VBox/Scroll/Content"]
+layout_mode = 2
+theme_override_colors/separator_color = Color(0.2, 0.3, 0.5, 1)
+custom_minimum_size = Vector2(0, 8)
+
+[node name="DedicationTitleLabel" type="Label" parent="VBox/Scroll/Content"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.55, 0.75, 1)
+theme_override_font_sizes/font_size = 22
+text = "DEDICATÓRIA"
+
+[node name="DedicationTextLabel" type="Label" parent="VBox/Scroll/Content"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.85, 0.9, 1)
+theme_override_font_sizes/font_size = 17
+autowrap_mode = 2
+text = ""
+
+[node name="Sep2" type="HSeparator" parent="VBox/Scroll/Content"]
+layout_mode = 2
+theme_override_colors/separator_color = Color(0.2, 0.3, 0.5, 1)
+custom_minimum_size = Vector2(0, 8)
+
+[node name="DeveloperTitleLabel" type="Label" parent="VBox/Scroll/Content"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0, 1)
+theme_override_font_sizes/font_size = 22
+text = "DESENVOLVEDOR"
+
+[node name="DeveloperTextLabel" type="Label" parent="VBox/Scroll/Content"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.85, 0.95, 1)
+theme_override_font_sizes/font_size = 17
+text = "jjmacagnan"
+
+[node name="GitHubProfileRow" type="HBoxContainer" parent="VBox/Scroll/Content"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="GitHubProfileLabel" type="Label" parent="VBox/Scroll/Content/GitHubProfileRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.7, 0.9, 1)
+theme_override_font_sizes/font_size = 15
+text = "GitHub (perfil):"
+
+[node name="GitHubProfileValue" type="Label" parent="VBox/Scroll/Content/GitHubProfileRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.8, 1, 1)
+theme_override_font_sizes/font_size = 15
+text = "https://github.com/jjmacagnan"
+
+[node name="GitHubProjectRow" type="HBoxContainer" parent="VBox/Scroll/Content"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="GitHubProjectLabel" type="Label" parent="VBox/Scroll/Content/GitHubProjectRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.7, 0.9, 1)
+theme_override_font_sizes/font_size = 15
+text = "GitHub (projeto):"
+
+[node name="GitHubProjectValue" type="Label" parent="VBox/Scroll/Content/GitHubProjectRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.8, 1, 1)
+theme_override_font_sizes/font_size = 15
+text = "https://github.com/jjmacagnan/GuitarHero"
+
+[node name="LinkedInRow" type="HBoxContainer" parent="VBox/Scroll/Content"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="LinkedInLabel" type="Label" parent="VBox/Scroll/Content/LinkedInRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.7, 0.9, 1)
+theme_override_font_sizes/font_size = 15
+text = "LinkedIn:"
+
+[node name="LinkedInValue" type="Label" parent="VBox/Scroll/Content/LinkedInRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.8, 1, 1)
+theme_override_font_sizes/font_size = 15
+text = "https://www.linkedin.com/in/jjmacagnan/"
+
+[node name="Sep3" type="HSeparator" parent="VBox/Scroll/Content"]
+layout_mode = 2
+theme_override_colors/separator_color = Color(0.2, 0.3, 0.5, 1)
+custom_minimum_size = Vector2(0, 8)
+
+[node name="TechTitleLabel" type="Label" parent="VBox/Scroll/Content"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0, 1)
+theme_override_font_sizes/font_size = 22
+text = "TECNOLOGIA"
+
+[node name="TechTextLabel" type="Label" parent="VBox/Scroll/Content"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.85, 0.95, 1)
+theme_override_font_sizes/font_size = 17
+text = "Godot 4.6  •  C#  •  .NET 8"
+
+[node name="Sep4" type="HSeparator" parent="VBox/Scroll/Content"]
+layout_mode = 2
+theme_override_colors/separator_color = Color(0.2, 0.3, 0.5, 1)
+custom_minimum_size = Vector2(0, 8)
+
+[node name="LicenseTitleLabel" type="Label" parent="VBox/Scroll/Content"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0, 1)
+theme_override_font_sizes/font_size = 22
+text = "LICENÇA"
+
+[node name="LicenseTextLabel" type="Label" parent="VBox/Scroll/Content"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.75, 0.8, 1)
+theme_override_font_sizes/font_size = 14
+autowrap_mode = 2
+text = ""
+
+[node name="BackButton" type="Button" parent="VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 48)
+theme_override_font_sizes/font_size = 20
+text = "← Voltar"

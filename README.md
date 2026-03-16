@@ -1,6 +1,8 @@
 # Guitar Metal — Godot 4 + C#
 
-Jogo de ritmo estilo Guitar Hero construído do zero com Godot 4.6 e C#. Suporta charts no formato Clone Hero (`.chart`), hold notes, seleção de dificuldade, controle gamepad e teclado simultâneos.
+Jogo de ritmo estilo Guitar Hero construído do zero com Godot 4.6 e C#. Suporta charts no formato Clone Hero (`.chart`) e Rock Band (`.mid`), hold notes, seleção de dificuldade, controle gamepad e teclado simultâneos, leaderboard local e internacionalização PT/EN.
+
+> Projeto desenvolvido para a disciplina de **Desenvolvimento de Jogos para Smartphones**, integrante da **Especialização em Programação para Dispositivos Móveis** oferecida pela **UTFPR — Universidade Tecnológica Federal do Paraná**.
 
 ---
 
@@ -9,7 +11,7 @@ Jogo de ritmo estilo Guitar Hero construído do zero com Godot 4.6 e C#. Suporta
 - Godot 4.6 (com suporte a C# / .NET)
 - .NET 8 SDK
 
-> Os arquivos de áudio (`.ogg`, `.mp3`) e charts (`.chart`) **não estão incluídos** no repositório. Adicione-os na pasta `Audio/` localmente.
+> Os arquivos de áudio (`.ogg`, `.mp3`) e charts (`.chart` / `.mid`) **não estão incluídos** no repositório. Adicione-os na pasta `Audio/` localmente.
 
 ---
 
@@ -23,21 +25,31 @@ res://
 │   ├── Note.cs              ← Física e visual da nota (tap e hold)
 │   ├── SongChart.cs         ← Estrutura de dados + geração procedural
 │   ├── ChartImporter.cs     ← Parser de arquivos .chart (Clone Hero)
+│   ├── MidiImporter.cs      ← Parser de arquivos .mid (Rock Band)
 │   ├── SongIniReader.cs     ← Leitor de song.ini (nome, artista, delay)
 │   ├── GameData.cs          ← Dados estáticos entre cenas
 │   ├── LoadingScreen.cs     ← State machine de carregamento
 │   ├── SongSelectMenu.cs    ← Seleção de música (scan da pasta Audio/)
 │   ├── DifficultySelect.cs  ← Seleção de dificuldade
 │   ├── MainMenu.cs          ← Menu principal
-│   └── ResultsScreen.cs     ← Tela de resultado
+│   ├── NameInput.cs         ← Teclado virtual (gamepad-friendly)
+│   ├── ResultsScreen.cs     ← Tela de resultado
+│   ├── Leaderboard.cs       ← Top 10 scores por música
+│   ├── ScoreStorage.cs      ← Persistência de scores (JSON)
+│   ├── Locale.cs            ← Internacionalização PT/EN
+│   └── Credits.cs           ← Tela de créditos e licença
 ├── Scenes/
 │   ├── MainMenu.tscn
+│   ├── NameInput.tscn
 │   ├── SongSelect.tscn
 │   ├── DifficultySelect.tscn
 │   ├── Loading.tscn
 │   ├── Game.tscn
-│   └── Results.tscn
-├── Audio/               ← Coloque seus .ogg/.mp3 e .chart aqui (ignorados pelo git)
+│   ├── Results.tscn
+│   ├── Leaderboard.tscn
+│   └── Credits.tscn
+├── Audio/               ← Coloque seus .ogg/.mp3 e .chart/.mid aqui (ignorados pelo git)
+├── LICENSE
 └── project.godot
 ```
 
@@ -46,7 +58,11 @@ res://
 ## Fluxo do Jogo
 
 ```
-MainMenu → SongSelect → [DifficultySelect] → Loading → Game → Results
+MainMenu → NameInput → SongSelect → [DifficultySelect] → Loading → Game → Results
+                ↕                                                           ↕
+           Leaderboard                                                  MainMenu
+                ↕
+            Credits
 ```
 
 ---
@@ -100,6 +116,8 @@ Teclado e gamepad funcionam simultaneamente. Navegação de menus pelo D-pad + A
 
 **Grades:** S >= 95% · A >= 85% · B >= 70% · C >= 55% · D < 55%
 
+As janelas de timing são ajustadas por dificuldade: Easy (1.5×), Medium (1.2×), Hard (1.0×), Expert (0.85×).
+
 ---
 
 ## Sincronização
@@ -126,6 +144,21 @@ Audio/
 
 O jogo lê `song.ini` para exibir "Artista - Título" na lista de seleção.
 
+> 🎸 Encontre milhares de charts gratuitos em **[Enchor](https://www.enchor.us)** — maior repositório de músicas compatíveis com Clone Hero.
+
+### Formato Rock Band (MIDI)
+
+Coloque o arquivo `.mid` junto com o áudio:
+
+```
+Audio/
+└── NomeMusica/
+    ├── notes.mid      ← chart no formato Rock Band
+    └── song.ogg
+```
+
+Dificuldades MIDI suportadas (notas MIDI): Expert (96–100), Hard (84–88), Medium (72–76), Easy (60–64).
+
 ### Formato solto (arquivo único)
 
 Coloque o áudio e o `.chart` na pasta `Audio/` com o mesmo nome base:
@@ -147,19 +180,24 @@ Audio/
 
 > **Dica:** Converta `.opus` para `.ogg` com `ffmpeg -i song.opus song.ogg`
 
-### Formato `.chart` suportado
-
-Compatível com o formato Clone Hero. Dificuldades suportadas:
-`ExpertSingle`, `HardSingle`, `MediumSingle`, `EasySingle`
-
-Suporta mudanças de BPM (múltiplos eventos `B` no `[SyncTrack]`).
-
 ### Fallback: chart procedural
 
-Se não houver `.chart`, o jogo gera um chart automático baseado no BPM e duração do áudio.
+Se não houver `.chart` ou `.mid`, o jogo gera um chart automático baseado no BPM e duração do áudio.
+
+---
+
+## Leaderboard
+
+Os scores são salvos localmente em `user://scores.json` (pasta de dados do Godot no sistema operacional). O leaderboard exibe os top 10 por música, com nome do jogador, score, grade, precisão e combo máximo. É possível limpar os scores de uma música individualmente.
+
+---
+
+## Idiomas
+
+O jogo suporta **Português (BR)** e **Inglês**. O idioma pode ser alterado pelo botão de idioma no menu principal. A preferência é aplicada em tempo real, sem necessidade de reiniciar.
 
 ---
 
 ## Licença
 
-MIT
+Distribuído sob a licença MIT. Consulte o arquivo [LICENSE](LICENSE) para mais detalhes.

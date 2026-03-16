@@ -113,5 +113,28 @@ public static class Locale
         ["KB_BACKSPACE"]    = new() { [Language.PT] = "APAGAR",              [Language.EN] = "DELETE" },
         ["KB_CLEAR"]        = new() { [Language.PT] = "LIMPAR",              [Language.EN] = "CLEAR" },
         ["CLEAR_SCORES"]    = new() { [Language.PT] = "Limpar scores",      [Language.EN] = "Clear Scores" },
+
+        // ── Créditos e Licença ─────────────────────────────────────────
+        ["CREDITS"]                  = new() { [Language.PT] = "Créditos",                        [Language.EN] = "Credits" },
+        ["CREDITS_TITLE"]            = new() { [Language.PT] = "CRÉDITOS E LICENÇA",              [Language.EN] = "CREDITS & LICENSE" },
+        ["CREDITS_ABOUT_TITLE"]      = new() { [Language.PT] = "SOBRE O PROJETO",                 [Language.EN] = "ABOUT THE PROJECT" },
+        ["CREDITS_ABOUT_TEXT"]       = new()
+        {
+            [Language.PT] = "Projeto desenvolvido para a disciplina de Desenvolvimento de Jogos para Smartphones, integrante da Especialização em Programação para Dispositivos Móveis oferecida pela UTFPR — Universidade Tecnológica Federal do Paraná.",
+            [Language.EN] = "Project developed for the Mobile Game Development course, part of the Mobile Devices Programming Specialization offered by UTFPR — Federal University of Technology of Paraná, Brazil."
+        },
+        ["CREDITS_DEDICATION_TITLE"] = new() { [Language.PT] = "DEDICATÓRIA",                     [Language.EN] = "DEDICATION" },
+        ["CREDITS_DEDICATION_TEXT"]  = new()
+        {
+            [Language.PT] = "Dedicado à minha esposa Natalí, que ama música e inspira cada nota deste jogo. ♪",
+            [Language.EN] = "Dedicated to my wife Natalí, who loves music and inspires every note in this game. ♪"
+        },
+        ["CREDITS_LICENSE_TITLE"]    = new() { [Language.PT] = "LICENÇA",                         [Language.EN] = "LICENSE" },
+        ["CREDITS_DEVELOPER"]        = new() { [Language.PT] = "DESENVOLVEDOR",                   [Language.EN] = "DEVELOPER" },
+        ["CREDITS_GITHUB_PROFILE"]   = new() { [Language.PT] = "GitHub (perfil):",                [Language.EN] = "GitHub (profile):" },
+        ["CREDITS_GITHUB_PROJECT"]   = new() { [Language.PT] = "GitHub (projeto):",               [Language.EN] = "GitHub (project):" },
+        ["CREDITS_LINKEDIN"]         = new() { [Language.PT] = "LinkedIn:",                       [Language.EN] = "LinkedIn:" },
+        ["CREDITS_TECH"]             = new() { [Language.PT] = "TECNOLOGIA",                      [Language.EN] = "TECHNOLOGY" },
+        ["CREDITS_TECH_TEXT"]        = new() { [Language.PT] = "Godot 4.6  •  C#  •  .NET 8",    [Language.EN] = "Godot 4.6  •  C#  •  .NET 8" },
     };
 }

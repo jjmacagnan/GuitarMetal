@@ -64,6 +64,12 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 22
 text = "RANKING"
 
+[node name="CreditsButton" type="Button" parent="VBox"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Créditos"
+
 [node name="QuitButton" type="Button" parent="VBox" unique_id=2022277961]
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
