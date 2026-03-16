@@ -7,6 +7,7 @@ public partial class MainMenu : Control
 	private Button _quitButton;
 	private Button _langButton;
 	private Button _leaderboardButton;
+	private Button _creditsButton;
 	private Label  _controlsLabel;
 
 	public override void _Ready()
@@ -16,6 +17,7 @@ public partial class MainMenu : Control
 		_quitButton        = GetNodeOrNull<Button>("VBox/QuitButton");
 		_langButton        = GetNodeOrNull<Button>("VBox/LanguageButton");
 		_leaderboardButton = GetNodeOrNull<Button>("VBox/LeaderboardButton");
+		_creditsButton     = GetNodeOrNull<Button>("VBox/CreditsButton");
 		_controlsLabel     = GetNodeOrNull<Label>("ControlsLabel");
 
 		if (_playButton != null) _playButton.Pressed += OnPlayPressed;
@@ -26,6 +28,7 @@ public partial class MainMenu : Control
 
 		if (_langButton != null) _langButton.Pressed += OnLanguageToggle;
 		if (_leaderboardButton != null) _leaderboardButton.Pressed += OnLeaderboardPressed;
+		if (_creditsButton     != null) _creditsButton.Pressed     += OnCreditsPressed;
 
 		// Foca Play ao entrar para navegação por controle
 		_playButton?.CallDeferred(Control.MethodName.GrabFocus);
@@ -46,6 +49,7 @@ public partial class MainMenu : Control
 	private void OnPlayPressed() => GetTree().ChangeSceneToFile("res://Scenes/NameInput.tscn");
 	private void OnQuitPressed() => GetTree().Quit();
 	private void OnLeaderboardPressed() => GetTree().ChangeSceneToFile("res://Scenes/Leaderboard.tscn");
+	private void OnCreditsPressed()     => GetTree().ChangeSceneToFile("res://Scenes/Credits.tscn");
 
 	private void OnLanguageToggle()
 	{
@@ -62,6 +66,7 @@ public partial class MainMenu : Control
 		if (_quitButton        != null) _quitButton.Text        = Locale.Tr("QUIT");
 		if (_langButton        != null) _langButton.Text        = Locale.Tr("LANGUAGE");
 		if (_leaderboardButton != null) _leaderboardButton.Text = Locale.Tr("LEADERBOARD");
+		if (_creditsButton     != null) _creditsButton.Text     = Locale.Tr("CREDITS");
 		if (_controlsLabel     != null) _controlsLabel.Text     = Locale.Tr("CONTROLS_HINT");
 	}
 }
