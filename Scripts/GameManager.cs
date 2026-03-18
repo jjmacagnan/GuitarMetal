@@ -93,7 +93,7 @@ public partial class GameManager : Node3D
 		_feedbackLabel = GetNodeOrNull<Label>("HUD/FeedbackLabel");
 		_accuracyLabel = GetNodeOrNull<Label>("HUD/AccuracyLabel");
 		_keyHintsLabel = GetNodeOrNull<Label>("HUD/KeyHints");
-		if (_keyHintsLabel != null) _keyHintsLabel.Text = Locale.Tr("CONTROLS_HINT_GAME");
+		if (_keyHintsLabel != null) _keyHintsLabel.Text = KeybindingStorage.BuildControlsHint(includePauseHint: true);
 
 		// Inicializa lanes
 		_lanes = new Lane[5];
@@ -192,40 +192,16 @@ public partial class GameManager : Node3D
 
 	// ── Input Map ──────────────────────────────────────────────────────────
 	/// <summary>
-	/// Registra as ações de lane no InputMap se ainda não existirem.
-	/// Ações pré-existentes (configuradas em Project → Input Map) são preservadas.
+	/// Registra as ações de lane no InputMap.
+	/// Se o jogador tiver bindings salvos (user://keybindings.cfg),
+	/// eles são aplicados via KeybindingStorage; caso contrário usam-se os defaults.
 	/// </summary>
 	private void SetupInputMap()
 	{
-		for (int i = 0; i < 5; i++)
-		{
-			string action = LaneActions[i];
-			if (!InputMap.HasAction(action))
-				InputMap.AddAction(action);
-
-			// Teclado — adiciona somente se ainda não mapeado
-			var evKey = new InputEventKey { Keycode = LaneKeys[i] };
-			if (!InputMap.ActionHasEvent(action, evKey))
-			{
-				InputMap.ActionAddEvent(action, evKey);
-				GD.Print($"[GameManager] InputMap: '{action}' → tecla {LaneKeys[i]}");
-			}
-
-				// Gamepad — sempre garante que o evento esteja mapeado
-			InputEvent evJoy = i switch
-			{
-				0 => new InputEventJoypadMotion  { Axis = JoyAxis.TriggerLeft,  AxisValue =  1f }, // L2
-				1 => new InputEventJoypadButton  { ButtonIndex = JoyButton.LeftShoulder },          // L1
-				2 => new InputEventJoypadButton  { ButtonIndex = JoyButton.RightShoulder },         // R1
-				3 => new InputEventJoypadMotion  { Axis = JoyAxis.TriggerRight, AxisValue =  1f }, // R2
-				_ => new InputEventJoypadButton  { ButtonIndex = JoyButton.Y },                    // X físico (Switch) = JoyButton.Y no Godot
-			};
-			if (!InputMap.ActionHasEvent(action, evJoy))
-			{
-				InputMap.ActionAddEvent(action, evJoy);
-				GD.Print($"[GameManager] InputMap: '{action}' → gamepad {evJoy}");
-			}
-		}
+		// Delega para KeybindingStorage — aplica defaults ou bindings customizados
+		// conforme a existência do arquivo de configuração.
+		KeybindingStorage.ApplyToInputMap();
+		GD.Print("[GameManager] InputMap configurado via KeybindingStorage.");
 
 		// Start / Menu / + → pause (adiciona ao ui_cancel existente)
 		const string pauseAction = "ui_cancel";
