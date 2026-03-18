@@ -116,8 +116,9 @@ public static class Locale
         ["CLEAR_SCORES"]    = new() { [Language.PT] = "Limpar scores",      [Language.EN] = "Clear Scores" },
 
         // ── Hint de teclas (gerado dinamicamente com as teclas mapeadas) ──
-        ["LANE_HINT_FMT"]    = new() { [Language.PT] = "[{0}] {1}",    [Language.EN] = "[{0}] {1}" },
-        ["PAUSE_HINT"]       = new() { [Language.PT] = "[ESC] Pausar", [Language.EN] = "[ESC] Pause" },
+        ["LANE_HINT_FMT"]         = new() { [Language.PT] = "[{0}] {1}",    [Language.EN] = "[{0}] {1}" },
+        ["GAMEPAD_LANE_HINT_FMT"] = new() { [Language.PT] = "({0}) {1}",   [Language.EN] = "({0}) {1}" },
+        ["PAUSE_HINT"]            = new() { [Language.PT] = "[ESC] Pausar", [Language.EN] = "[ESC] Pause" },
 
         // ── Configurações / Remapeamento ───────────────────────────────
         ["SETTINGS"]         = new() { [Language.PT] = "Configurações",              [Language.EN] = "Settings" },

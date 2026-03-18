@@ -228,48 +228,18 @@ public partial class SettingsMenu : Control
 
         if (isKeyboard)
         {
-            btn.Text = KeyDisplayName(KeybindingStorage.GetKey(lane));
+            // Trata Space separadamente para exibição localizada
+            btn.Text = KeybindingStorage.GetKey(lane) == Key.Space
+                ? Locale.Tr("KB_SPACE")
+                : OS.GetKeycodeString(KeybindingStorage.GetKey(lane));
         }
         else
         {
             btn.Text = KeybindingStorage.GetIsAxis(lane)
-                ? AxisDisplayName(KeybindingStorage.GetAxis(lane))
-                : ButtonDisplayName(KeybindingStorage.GetButton(lane));
+                ? KeybindingStorage.AxisDisplayName(KeybindingStorage.GetAxis(lane))
+                : KeybindingStorage.ButtonDisplayName(KeybindingStorage.GetButton(lane));
         }
     }
-
-    // ── Nomes para exibição ───────────────────────────────────────────────
-    private static string KeyDisplayName(Key k) => k switch
-    {
-        Key.Space => Locale.Tr("KB_SPACE"),
-        _         => OS.GetKeycodeString(k)
-    };
-
-    private static string ButtonDisplayName(JoyButton b) => b switch
-    {
-        JoyButton.A             => "A / Cross",
-        JoyButton.B             => "B / Circle",
-        JoyButton.X             => "X / Square",
-        JoyButton.Y             => "Y / Triangle",
-        JoyButton.LeftShoulder  => "L1",
-        JoyButton.RightShoulder => "R1",
-        JoyButton.LeftStick     => "L3",
-        JoyButton.RightStick    => "R3",
-        JoyButton.Start         => "Start",
-        JoyButton.Back          => "Select",
-        _                       => b.ToString()
-    };
-
-    private static string AxisDisplayName(JoyAxis a) => a switch
-    {
-        JoyAxis.TriggerLeft  => "L2 (Trigger)",
-        JoyAxis.TriggerRight => "R2 (Trigger)",
-        JoyAxis.LeftX        => "L-Stick X",
-        JoyAxis.LeftY        => "L-Stick Y",
-        JoyAxis.RightX       => "R-Stick X",
-        JoyAxis.RightY       => "R-Stick Y",
-        _                    => a.ToString()
-    };
 
     // ── Restaurar padrões ─────────────────────────────────────────────────
     private void OnResetPressed()

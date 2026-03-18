@@ -134,25 +134,69 @@ public static class KeybindingStorage
         { "LANE_GREEN", "LANE_RED", "LANE_YELLOW", "LANE_BLUE", "LANE_ORANGE" };
 
     /// <summary>
-    /// Gera a string de hint de teclas dinamicamente a partir dos bindings atuais.
-    /// Ex: "[A] Verde   [S] Vermelho   [J] Amarelo   [K] Azul   [L] Laranja"
-    /// Se <paramref name="includeEscHint"/> for true, acrescenta "  |   [ESC] Pausar".
+    /// Gera a string de hint de controles dinamicamente a partir dos bindings atuais.
+    /// Retorna duas linhas separadas por \n:
+    ///   Linha 1 (teclado): "[A] Verde   [S] Vermelho   ..."  + opcional "| [ESC] Pausar"
+    ///   Linha 2 (gamepad): "(L2) Verde  (L1) Vermelho  ..."
     /// </summary>
     public static string BuildControlsHint(bool includeEscHint = false)
     {
         EnsureLoaded();
-        var parts = new string[5];
+
+        var kbParts  = new string[5];
+        var gpParts  = new string[5];
+
         for (int i = 0; i < 5; i++)
         {
-            string keyName  = OS.GetKeycodeString(_keys![i]);
             string laneName = Locale.Tr(LaneNameKeys[i]);
-            parts[i] = Locale.Tr("LANE_HINT_FMT", keyName, laneName);
+
+            // Teclado
+            string keyName = OS.GetKeycodeString(_keys![i]);
+            kbParts[i] = Locale.Tr("LANE_HINT_FMT", keyName, laneName);
+
+            // Gamepad
+            string gpName = _isAxis![i]
+                ? AxisDisplayName(_axes![i])
+                : ButtonDisplayName(_buttons![i]);
+            gpParts[i] = Locale.Tr("GAMEPAD_LANE_HINT_FMT", gpName, laneName);
         }
-        string hint = string.Join("   ", parts);
+
+        string kbLine = string.Join("   ", kbParts);
         if (includeEscHint)
-            hint += "   |   " + Locale.Tr("PAUSE_HINT");
-        return hint;
+            kbLine += "   |   " + Locale.Tr("PAUSE_HINT");
+
+        string gpLine = string.Join("   ", gpParts);
+
+        return kbLine + "\n" + gpLine;
     }
+
+    /// <summary>Nome legível de um botão de gamepad (usado em hints e Settings).</summary>
+    public static string ButtonDisplayName(JoyButton b) => b switch
+    {
+        JoyButton.A             => "A / Cross",
+        JoyButton.B             => "B / Circle",
+        JoyButton.X             => "X / Square",
+        JoyButton.Y             => "Y / Triangle",
+        JoyButton.LeftShoulder  => "L1",
+        JoyButton.RightShoulder => "R1",
+        JoyButton.LeftStick     => "L3",
+        JoyButton.RightStick    => "R3",
+        JoyButton.Start         => "Start",
+        JoyButton.Back          => "Select",
+        _                       => b.ToString()
+    };
+
+    /// <summary>Nome legível de um eixo de gamepad (usado em hints e Settings).</summary>
+    public static string AxisDisplayName(JoyAxis a) => a switch
+    {
+        JoyAxis.TriggerLeft  => "L2",
+        JoyAxis.TriggerRight => "R2",
+        JoyAxis.LeftX        => "L-Stick X",
+        JoyAxis.LeftY        => "L-Stick Y",
+        JoyAxis.RightX       => "R-Stick X",
+        JoyAxis.RightY       => "R-Stick Y",
+        _                    => a.ToString()
+    };
 
     // ── Privado ───────────────────────────────────────────────────────────
 
