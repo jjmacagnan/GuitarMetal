@@ -197,7 +197,10 @@ public partial class LoadingScreen : Control
 		// Offset: combina o offset do .chart com o delay do song.ini (ambos podem ser não-zero)
 		_startOffset = imported.StartOffset + iniDelayMs / 1000f;
 
-		if (!string.IsNullOrEmpty(imported.SongName))
+		// Usa o nome do .chart apenas como fallback — song.ini e nome da pasta têm prioridade.
+		// GameData.SelectedSongName já vem preenchido pelo SongSelectMenu (pasta ou song.ini),
+		// então só sobrescrevemos se ainda estiver vazio para evitar perder "Artista - Título".
+		if (!string.IsNullOrEmpty(imported.SongName) && string.IsNullOrEmpty(GameData.SelectedSongName))
 			GameData.SelectedSongName = imported.SongName;
 
 		if (imported.Notes.Count > 0)
@@ -291,7 +294,9 @@ public partial class LoadingScreen : Control
 		_bpm         = imported.BPM;
 		_startOffset = imported.StartOffset + iniDelayMs / 1000f;
 
-		if (!string.IsNullOrEmpty(imported.SongName) && imported.SongName != "thefinalcountdown")
+		// Mesmo critério do TryLoadDotChart: não sobrescreve nome já resolvido pelo song.ini / pasta.
+		if (!string.IsNullOrEmpty(imported.SongName) && imported.SongName != "thefinalcountdown"
+		    && string.IsNullOrEmpty(GameData.SelectedSongName))
 			GameData.SelectedSongName = imported.SongName;
 
 		_chartNotes = new List<NoteData>();
