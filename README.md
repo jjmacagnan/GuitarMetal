@@ -36,7 +36,9 @@ res://
 │   ├── ResultsScreen.cs     ← Tela de resultado
 │   ├── Leaderboard.cs       ← Top 10 scores por música
 │   ├── ScoreStorage.cs      ← Persistência de scores (JSON)
+│   ├── KeybindingStorage.cs ← Persistência e aplicação de keybindings customizados
 │   ├── Locale.cs            ← Internacionalização PT/EN
+│   ├── SettingsMenu.cs      ← Tela de configurações (remapeamento de teclas)
 │   └── Credits.cs           ← Tela de créditos e licença
 ├── Scenes/
 │   ├── MainMenu.tscn
@@ -47,6 +49,7 @@ res://
 │   ├── Game.tscn
 │   ├── Results.tscn
 │   ├── Leaderboard.tscn
+│   ├── Settings.tscn
 │   └── Credits.tscn
 ├── Audio/               ← Coloque seus .ogg/.mp3 e .chart/.mid aqui (ignorados pelo git)
 ├── LICENSE
@@ -59,8 +62,8 @@ res://
 
 ```
 MainMenu → NameInput → SongSelect → [DifficultySelect] → Loading → Game → Results
-                ↕                                                           ↕
-           Leaderboard                                                  MainMenu
+    ↕           ↕                                                           ↕
+ Settings   Leaderboard                                                 MainMenu
                 ↕
             Credits
 ```
@@ -69,7 +72,9 @@ MainMenu → NameInput → SongSelect → [DifficultySelect] → Loading → Gam
 
 ## Controles
 
-### Teclado
+> Os controles abaixo são os **padrões**. Todas as teclas e botões de lane podem ser remapeados na tela de **Configurações** (Menu Principal → Configurações).
+
+### Teclado (padrão)
 
 | Tecla | Lane | Cor      |
 |-------|------|----------|
@@ -78,9 +83,9 @@ MainMenu → NameInput → SongSelect → [DifficultySelect] → Loading → Gam
 | J     | 2    | Amarelo  |
 | K     | 3    | Azul     |
 | L     | 4    | Laranja  |
-| ESC   | —    | Pause    |
+| ESC   | —    | Pausar   |
 
-### Gamepad (Switch Pro / Xbox)
+### Gamepad (padrão — Switch Pro / Xbox)
 
 | Botão       | Lane | Cor      |
 |-------------|------|----------|
@@ -89,9 +94,21 @@ MainMenu → NameInput → SongSelect → [DifficultySelect] → Loading → Gam
 | R / RB      | 2    | Amarelo  |
 | ZR / RT     | 3    | Azul     |
 | X (topo)    | 4    | Laranja  |
-| Start / +   | —    | Pause    |
+| Start / +   | —    | Pausar   |
 
 Teclado e gamepad funcionam simultaneamente. Navegação de menus pelo D-pad + A (confirmar) / B (voltar).
+
+---
+
+## Configurações
+
+Acesse **Menu Principal → Configurações** para remapear as teclas de cada lane.
+
+- **Aba Teclado** — clique em uma lane e pressione a tecla desejada. `ESC` cancela.
+- **Aba Controle** — clique em uma lane e pressione o botão ou gatilho desejado.
+- **Restaurar Padrões** — volta para o mapeamento original.
+- As configurações são salvas automaticamente ao sair da tela (`user://keybindings.cfg`).
+- As legendas no Menu Principal e no HUD do jogo refletem sempre os bindings ativos.
 
 ---
 

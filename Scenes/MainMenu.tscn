@@ -70,6 +70,12 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "Créditos"
 
+[node name="SettingsButton" type="Button" parent="VBox"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Configurações"
+
 [node name="QuitButton" type="Button" parent="VBox" unique_id=2022277961]
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
@@ -88,11 +94,11 @@ anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = -36.0
+offset_top = -56.0
 offset_bottom = -8.0
 grow_horizontal = 2
 grow_vertical = 0
 theme_override_colors/font_color = Color(0.5, 0.5, 0.6, 1)
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 14
 text = "[A] Verde   [S] Vermelho   [J] Amarelo   [K] Azul   [L] Laranja"
 horizontal_alignment = 1

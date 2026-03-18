@@ -1,0 +1,95 @@
+[gd_scene format=3 uid="uid://settings_menu_scene"]
+
+[ext_resource type="Script" path="res://Scripts/SettingsMenu.cs" id="1_settings"]
+
+[node name="Settings" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_settings")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.04, 0.04, 0.12, 1)
+
+[node name="VBox" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 80.0
+offset_top = 24.0
+offset_right = -80.0
+offset_bottom = -24.0
+theme_override_constants/separation = 16
+
+[node name="TitleLabel" type="Label" parent="VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 0.9, 1, 1)
+theme_override_font_sizes/font_size = 40
+text = "CONFIGURAÇÕES"
+horizontal_alignment = 1
+
+[node name="TabContainer" type="TabContainer" parent="VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="KeyboardTab" type="Control" parent="VBox/TabContainer"]
+layout_mode = 2
+
+[node name="KeyboardVBox" type="VBoxContainer" parent="VBox/TabContainer/KeyboardTab"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 16.0
+offset_right = -20.0
+offset_bottom = -16.0
+theme_override_constants/separation = 12
+
+[node name="GamepadTab" type="Control" parent="VBox/TabContainer"]
+layout_mode = 2
+
+[node name="GamepadVBox" type="VBoxContainer" parent="VBox/TabContainer/GamepadTab"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 16.0
+offset_right = -20.0
+offset_bottom = -16.0
+theme_override_constants/separation = 12
+
+[node name="BottomRow" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_constants/separation = 24
+
+[node name="ResetButton" type="Button" parent="VBox/BottomRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 44)
+theme_override_font_sizes/font_size = 18
+text = "Restaurar Padrões"
+
+[node name="SavedLabel" type="Label" parent="VBox/BottomRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 0.9, 1, 1)
+theme_override_font_sizes/font_size = 18
+text = ""
+visible = false
+
+[node name="BackButton" type="Button" parent="VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 48)
+theme_override_font_sizes/font_size = 20
+text = "← Voltar"
