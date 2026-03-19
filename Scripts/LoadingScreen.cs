@@ -63,14 +63,13 @@ public partial class LoadingScreen : Control
 			case State.RequestAudio:
 			{
 				string ap = GameData.SelectedSongPath;
-				if (!FileAccess.FileExists(ap))
+				if (!ResourceLoader.Exists(ap) && !FileAccess.FileExists(ap))
 				{
 					GD.PushError($"[Loading] Áudio não encontrado: {ap}");
 					SetStatus($"Erro: {Locale.Tr("ERR_NOT_FOUND")}\n[ESC para voltar]", 0);
 					_state = State.Error;
 					break;
 				}
-				// Inicia carregamento em thread separada (não bloqueia o frame)
 				Error reqErr = ResourceLoader.LoadThreadedRequest(ap, "AudioStream");
 				if (reqErr != Error.Ok)
 				{
@@ -101,18 +100,15 @@ public partial class LoadingScreen : Control
 
 				if (status == ResourceLoader.ThreadLoadStatus.InProgress)
 				{
-					// Ainda carregando — atualiza barra de progresso animada e aguarda
 					Godot.Collections.Array progress = new();
 					ResourceLoader.LoadThreadedGetStatus(ap, progress);
 					float pct = progress.Count > 0 ? (float)(double)progress[0] : 0f;
-					if (_progressBar != null) _progressBar.Value = 10f + pct * 20f; // 10–30%
+					if (_progressBar != null) _progressBar.Value = 10f + pct * 20f;
 					break;
 				}
 
 				if (status == ResourceLoader.ThreadLoadStatus.Loaded)
-				{
 					GameData.LoadedStream = ResourceLoader.LoadThreadedGet(ap) as AudioStream;
-				}
 
 				if (GameData.LoadedStream == null)
 				{
