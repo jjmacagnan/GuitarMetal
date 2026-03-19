@@ -414,7 +414,7 @@ public static class MidiImporter
     /// Extrai NoteData da track de guitarra para uma dificuldade específica.
     /// </summary>
     private static List<NoteData> ExtractNotes(byte[] guitarTrack, int baseNote,
-        SortedDictionary<long, int> tempoMap, int division)
+        SortedDictionary<long, int> tempoMapRaw, int division)
     {
         // Primeiro, coleta note-on e note-off com ticks absolutos
         // Chave: note number → lista de (tick, isOn)
@@ -430,6 +430,9 @@ public static class MidiImporter
             events[note].Add((tick, vel > 0));
         });
 
+        // Pré-computa tabela de tempos uma única vez
+        var timeMap = BuildTimeMap(tempoMapRaw, division);
+
         // Converte em NoteData: emparelha note-on com note-off
         var result = new List<NoteData>();
 
@@ -439,23 +442,22 @@ public static class MidiImporter
 
             for (int i = 0; i < evts.Count; i++)
             {
-                if (!evts[i].isOn) continue; // pula note-off sem par
+                if (!evts[i].isOn) continue;
 
-                long onTick = evts[i].tick;
+                long onTick  = evts[i].tick;
                 long offTick = onTick;
 
-                // Procura o note-off correspondente
                 for (int j = i + 1; j < evts.Count; j++)
                 {
-                    if (!evts[j].isOn) // note-off encontrado
+                    if (!evts[j].isOn)
                     {
                         offTick = evts[j].tick;
                         break;
                     }
                 }
 
-                double timeOn  = TicksToSeconds(onTick, tempoMap, division);
-                double timeOff = TicksToSeconds(offTick, tempoMap, division);
+                double timeOn  = TicksToSeconds(onTick,  timeMap);
+                double timeOff = TicksToSeconds(offTick, timeMap);
                 float  duration = (float)(timeOff - timeOn);
 
                 // Notas com duração muito curta (<0.1s) são tratadas como taps
@@ -507,23 +509,52 @@ public static class MidiImporter
 
     // ── Time conversion ───────────────────────────────────────────────────────
 
-    /// <summary>Converte ticks absolutos em segundos usando o mapa de tempo.</summary>
-    private static double TicksToSeconds(long ticks, SortedDictionary<long, int> tempoMap, int division)
-    {
-        double time = 0;
-        long prevTick = 0;
-        int prevTempo = 500000; // 120 BPM default
+    // ── Time map pré-computado ────────────────────────────────────────────
 
-        foreach (var (mapTick, tempo) in tempoMap)
+    private struct TimePoint
+    {
+        public long   Tick;
+        public double Time;
+        public double SecsPerTick;
+    }
+
+    private static List<TimePoint> BuildTimeMap(SortedDictionary<long, int> tempoMap, int division)
+    {
+        var    map    = new List<TimePoint>(tempoMap.Count);
+        double time   = 0;
+        long   prev   = 0;
+        int    tempo  = 500000; // 120 BPM default
+
+        foreach (var (tick, nextTempo) in tempoMap)
         {
-            if (mapTick >= ticks) break;
-            time += (mapTick - prevTick) / (double)division * (prevTempo / 1_000_000.0);
-            prevTick = mapTick;
-            prevTempo = tempo;
+            if (tick > prev)
+                time += (tick - prev) / (double)division * (tempo / 1_000_000.0);
+
+            map.Add(new TimePoint
+            {
+                Tick        = tick,
+                Time        = time,
+                SecsPerTick = nextTempo / 1_000_000.0 / division
+            });
+
+            prev  = tick;
+            tempo = nextTempo;
         }
 
-        time += (ticks - prevTick) / (double)division * (prevTempo / 1_000_000.0);
-        return time;
+        return map;
+    }
+
+    private static double TicksToSeconds(long ticks, List<TimePoint> timeMap)
+    {
+        int lo = 0, hi = timeMap.Count - 1;
+        while (lo < hi)
+        {
+            int mid = (lo + hi + 1) / 2;
+            if (timeMap[mid].Tick <= ticks) lo = mid;
+            else hi = mid - 1;
+        }
+        var pt = timeMap[lo];
+        return pt.Time + (ticks - pt.Tick) * pt.SecsPerTick;
     }
 
     // ── Helpers ────────────────────────────────────────────────────────────────
