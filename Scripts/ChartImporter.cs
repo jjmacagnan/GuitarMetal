@@ -93,6 +93,9 @@ public static class ChartImporter
 			return chart;
 		}
 
+		// Pré-computa tabela de tempos uma única vez — O(BPM events)
+		var timeMap  = BuildTimeMap(bpmMap, resolution);
+
 		var noteList = new List<NoteData>();
 		section = "";
 		foreach (string raw in lines)
@@ -102,7 +105,7 @@ public static class ChartImporter
 			if (line is "{" or "}") continue;
 
 			if (section == targetTrack)
-				ParseNoteLine(line, noteList, bpmMap, resolution, offset);
+				ParseNoteLine(line, noteList, timeMap, offset);
 		}
 
 		noteList.Sort((a, b) => a.Time.CompareTo(b.Time));
@@ -144,7 +147,7 @@ public static class ChartImporter
 	}
 
 	private static void ParseNoteLine(string line, List<NoteData> noteList,
-		SortedDictionary<long, float> bpmMap, float resolution, float offset)
+		List<TimePoint> timeMap, float offset)
 	{
 		// Formato: tick = N fret sustain   ex: 768 = N 0 0
 		int eq = line.IndexOf('=');
@@ -159,12 +162,12 @@ public static class ChartImporter
 		if (!int.TryParse(parts[1],  NumberStyles.Integer, CultureInfo.InvariantCulture, out int fret))     return;
 		if (!long.TryParse(parts[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out long sustain)) return;
 
-		// Frets 0-4 = lanes jogáveis; 5+ são modificadores (força, tap, open)
 		if (fret < 0 || fret > 4) return;
 
-		double noteTime  = TicksToSeconds(tick, bpmMap, resolution) + offset;
-		float  noteDur   = sustain > 0
-			? (float)(TicksToSeconds(tick + sustain, bpmMap, resolution) - TicksToSeconds(tick, bpmMap, resolution))
+		// Busca binária — O(log n) por nota em vez de O(n)
+		double noteTime = TicksToSeconds(tick, timeMap) + offset;
+		float  noteDur  = sustain > 0
+			? (float)(TicksToSeconds(tick + sustain, timeMap) - TicksToSeconds(tick, timeMap))
 			: 0f;
 
 		noteList.Add(new NoteData
@@ -198,23 +201,55 @@ public static class ChartImporter
 		return null;
 	}
 
-	/// <summary>Converte ticks em segundos respeitando mudanças de BPM.</summary>
-	private static double TicksToSeconds(long ticks, SortedDictionary<long, float> bpmMap, float resolution)
-	{
-		double time    = 0;
-		long   prevTick = 0;
-		float  prevBpm  = GetBpmAtTick(0, bpmMap);
+	// ── Time map pré-computado ────────────────────────────────────────────
+	// Evita O(notas × mudanças_BPM) ao pré-calcular o tempo acumulado em
+	// cada ponto de mudança de BPM e usar busca binária por nota.
 
-		foreach (var (mapTick, bpm) in bpmMap)
+	private struct TimePoint
+	{
+		public long   Tick;
+		public double Time;
+		public double SecsPerTick; // segundos por tick neste segmento
+	}
+
+	private static List<TimePoint> BuildTimeMap(SortedDictionary<long, float> bpmMap, float resolution)
+	{
+		var map     = new List<TimePoint>(bpmMap.Count);
+		double time = 0;
+		long   prev = 0;
+		float  bpm  = 120f;
+
+		foreach (var (tick, nextBpm) in bpmMap)
 		{
-			if (mapTick >= ticks) break;
-			time    += (mapTick - prevTick) / (double)resolution * (60.0 / prevBpm);
-			prevTick = mapTick;
-			prevBpm  = bpm;
+			if (tick > prev)
+				time += (tick - prev) / (double)resolution * (60.0 / bpm);
+
+			map.Add(new TimePoint
+			{
+				Tick        = tick,
+				Time        = time,
+				SecsPerTick = 60.0 / nextBpm / resolution
+			});
+
+			prev = tick;
+			bpm  = nextBpm;
 		}
 
-		time += (ticks - prevTick) / (double)resolution * (60.0 / prevBpm);
-		return time;
+		return map;
+	}
+
+	private static double TicksToSeconds(long ticks, List<TimePoint> timeMap)
+	{
+		// Busca binária: encontra o segmento correto em O(log n)
+		int lo = 0, hi = timeMap.Count - 1;
+		while (lo < hi)
+		{
+			int mid = (lo + hi + 1) / 2;
+			if (timeMap[mid].Tick <= ticks) lo = mid;
+			else hi = mid - 1;
+		}
+		var pt = timeMap[lo];
+		return pt.Time + (ticks - pt.Tick) * pt.SecsPerTick;
 	}
 
 	private static float GetBpmAtTick(long tick, SortedDictionary<long, float> bpmMap)

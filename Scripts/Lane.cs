@@ -31,6 +31,14 @@ public partial class Lane : Node3D
 	private bool                _wasHolding;
 	private bool                _wasNoteInWindow;
 
+	// ── Touch zones (calculadas a partir da projeção 3D→2D da câmera) ──────
+	// Armazena os limites em pixels da zona de toque desta lane.
+	// Calculados uma vez na primeira interação (câmera já ativa na cena).
+	private float _touchLeftBound   = 0f;
+	private float _touchRightBound  = float.MaxValue;
+	private bool  _touchBoundsReady = false;
+	private int   _holdTouchIndex   = -1;  // dedo que iniciou o hold (multi-touch safety)
+
 	[Signal] public delegate void NoteHitInLaneEventHandler(int lane, Note note);
 	[Signal] public delegate void HoldCompleteInLaneEventHandler(int lane, Note note);
 	[Signal] public delegate void NoteMissedInLaneEventHandler(int lane);
@@ -171,6 +179,42 @@ public partial class Lane : Node3D
 	{
 		if (@event.IsEcho()) return;
 
+		// ── Touch input (Android / iOS) ───────────────────────────────────
+		// As zonas de toque são calculadas projetando a posição 3D de cada
+		// botão na tela via Camera3D.UnprojectPosition(), garantindo alinhamento
+		// visual exato independente da perspectiva da câmera.
+		if (@event is InputEventScreenTouch evTouch)
+		{
+			Vector2 viewSize = GetViewport().GetVisibleRect().Size;
+			// Ignora toques na faixa superior do ecrã (HUD / botão de pausa)
+			if (evTouch.Position.Y < viewSize.Y * 0.25f) return;
+
+			// Calcula os limites de zona a partir da projeção da câmera (uma vez)
+			EnsureTouchBounds(viewSize);
+
+			float touchX = evTouch.Position.X;
+			if (touchX < _touchLeftBound || touchX >= _touchRightBound) return;
+
+			if (evTouch.Pressed)
+			{
+				if (_holdTouchIndex < 0) _holdTouchIndex = evTouch.Index;
+				OnKeyPressed();
+			}
+			else
+			{
+				// Só libera hold se for o mesmo dedo que iniciou o toque
+				if (evTouch.Index == _holdTouchIndex)
+				{
+					_holdTouchIndex = -1;
+					OnKeyReleased();
+				}
+			}
+
+			GetViewport().SetInputAsHandled();
+			return;
+		}
+
+		// ── Teclado / Gamepad ─────────────────────────────────────────────
 		string action = $"lane_{LaneIndex}";
 		if (!InputMap.HasAction(action)) return;
 
@@ -337,6 +381,7 @@ public partial class Lane : Node3D
 			if (_currentHoldNote == n)
 			{
 				_currentHoldNote = null;
+				_holdTouchIndex  = -1;
 				ShowReleasePenalty();
 			}
 			EmitSignal(SignalName.NoteMissedInLane, LaneIndex);
@@ -347,13 +392,55 @@ public partial class Lane : Node3D
 			note.NoteHit          -= onHit;
 			note.NoteMissed       -= onMissed;
 			note.HoldComplete     -= onHoldComplete;
-			if (_currentHoldNote == n) _currentHoldNote = null;
+			if (_currentHoldNote == n)
+			{
+				_currentHoldNote = null;
+				_holdTouchIndex  = -1;
+			}
 			EmitSignal(SignalName.HoldCompleteInLane, LaneIndex, n);
 		};
 
 		note.NoteHit          += onHit;
 		note.NoteMissed       += onMissed;
 		note.HoldComplete     += onHoldComplete;
+	}
+
+	/// <summary>
+	/// Calcula os limites em pixels (X) da zona de toque desta lane, projetando
+	/// a posição 3D do botão na tela via Camera3D. Executado apenas uma vez;
+	/// resultado cacheado em _touchLeftBound/_touchRightBound.
+	/// </summary>
+	private void EnsureTouchBounds(Vector2 viewSize)
+	{
+		if (_touchBoundsReady) return;
+
+		var camera = GetViewport()?.GetCamera3D();
+		if (camera == null) return;   // câmera ainda não ativa — tenta no próximo toque
+
+		// Ponto de referência: cap do botão desta lane (coordenadas mundo)
+		// GlobalPosition.X já é o X desta lane; Y/Z correspondem ao botão visível.
+		Vector3 myBtn = GlobalPosition + new Vector3(0f, 0.10f, -0.8f);
+		float   myX   = camera.UnprojectPosition(myBtn).X;
+
+		// Espaçamento entre lanes no espaço mundo (LaneX = {-4,-2,0,2,4} → Δ = 2)
+		const float LaneSpacing = 2f;
+
+		_touchLeftBound  = 0f;
+		_touchRightBound = viewSize.X;
+
+		if (LaneIndex > 0)
+		{
+			float leftX = camera.UnprojectPosition(myBtn + new Vector3(-LaneSpacing, 0f, 0f)).X;
+			_touchLeftBound = (myX + leftX) * 0.5f;
+		}
+		if (LaneIndex < 4)
+		{
+			float rightX = camera.UnprojectPosition(myBtn + new Vector3(LaneSpacing, 0f, 0f)).X;
+			_touchRightBound = (myX + rightX) * 0.5f;
+		}
+
+		_touchBoundsReady = true;
+		GD.Print($"[Lane{LaneIndex}] TouchZone: {_touchLeftBound:F0}–{_touchRightBound:F0}px (tela {viewSize.X:F0}px)");
 	}
 
 	private void ShowReleasePenalty()

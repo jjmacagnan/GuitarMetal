@@ -13,7 +13,7 @@ public partial class LoadingScreen : Control
 	private Label       _loadingLabel;
 	private ProgressBar _progressBar;
 
-	private enum State { Init, LoadAudio, ReadMetadata, GenerateChart, Ready, Error }
+	private enum State { Init, RequestAudio, LoadAudio, ReadMetadata, GenerateChart, Ready, Error }
 	private State _state = State.Init;
 
 	// Metadados lidos do JSON (ou defaults)
@@ -53,37 +53,80 @@ public partial class LoadingScreen : Control
 	{
 		switch (_state)
 		{
-			// ── Etapa 1: lê o arquivo de áudio ──────────────────────────
+			// ── Etapa 0: inicializa e dispara o carregamento assíncrono ──
 			case State.Init:
+				SetStatus(Locale.Tr("LOADING_AUDIO"), 5);
+				_state = State.RequestAudio;
+				break;
+
+			// ── Etapa 1a: enfileira carregamento em background thread ────
+			case State.RequestAudio:
+			{
+				string ap = GameData.SelectedSongPath;
+				if (!ResourceLoader.Exists(ap) && !FileAccess.FileExists(ap))
+				{
+					GD.PushError($"[Loading] Áudio não encontrado: {ap}");
+					SetStatus($"Erro: {Locale.Tr("ERR_NOT_FOUND")}\n[ESC para voltar]", 0);
+					_state = State.Error;
+					break;
+				}
+				Error reqErr = ResourceLoader.LoadThreadedRequest(ap, "AudioStream");
+				if (reqErr != Error.Ok)
+				{
+					// Fallback síncrono se o threaded request falhar (p.ex. no editor)
+					GameData.LoadedStream = GD.Load<AudioStream>(ap);
+					if (GameData.LoadedStream == null)
+					{
+						SetStatus($"Erro: {Locale.Tr("ERR_UNSUPPORTED")}\n[ESC para voltar]", 0);
+						_state = State.Error;
+					}
+					else
+					{
+						SetStatus(Locale.Tr("LOADING_META"), 30);
+						_state = State.ReadMetadata;
+					}
+					break;
+				}
 				SetStatus(Locale.Tr("LOADING_AUDIO"), 10);
 				_state = State.LoadAudio;
 				break;
+			}
 
+			// ── Etapa 1b: aguarda o carregamento (poll sem bloquear) ─────
 			case State.LoadAudio:
-				string audioPath = GameData.SelectedSongPath;
-				bool fileExists  = FileAccess.FileExists(audioPath);
-				bool hasImport   = FileAccess.FileExists(audioPath + ".import");
+			{
+				string ap     = GameData.SelectedSongPath;
+				var    status = ResourceLoader.LoadThreadedGetStatus(ap);
 
-				var stream = GD.Load<AudioStream>(audioPath);
-				GameData.LoadedStream = stream;
-
-				if (stream == null)
+				if (status == ResourceLoader.ThreadLoadStatus.InProgress)
 				{
-					string reason = !fileExists
-						? Locale.Tr("ERR_NOT_FOUND")
-						: !hasImport
-							? Locale.Tr("ERR_NOT_IMPORTED")
-							: Locale.Tr("ERR_UNSUPPORTED");
-					GD.PushError($"[Loading] Falha ao carregar áudio ({reason}): {audioPath}");
+					Godot.Collections.Array progress = new();
+					ResourceLoader.LoadThreadedGetStatus(ap, progress);
+					float pct = progress.Count > 0 ? (float)(double)progress[0] : 0f;
+					if (_progressBar != null) _progressBar.Value = 10f + pct * 20f;
+					break;
+				}
+
+				if (status == ResourceLoader.ThreadLoadStatus.Loaded)
+					GameData.LoadedStream = ResourceLoader.LoadThreadedGet(ap) as AudioStream;
+
+				if (GameData.LoadedStream == null)
+				{
+					bool hasImport = FileAccess.FileExists(ap + ".import");
+					string reason  = !hasImport
+						? Locale.Tr("ERR_NOT_IMPORTED")
+						: Locale.Tr("ERR_UNSUPPORTED");
+					GD.PushError($"[Loading] Falha ao carregar áudio ({reason}): {ap}");
 					SetStatus($"Erro: {reason}\n[ESC para voltar]", 0);
 					_state = State.Error;
 					break;
 				}
 
-				GD.Print($"[Loading] Áudio carregado: {audioPath} ({stream.GetLength():F1}s)");
+				GD.Print($"[Loading] Áudio carregado: {ap} ({GameData.LoadedStream.GetLength():F1}s)");
 				SetStatus(Locale.Tr("LOADING_META"), 30);
 				_state = State.ReadMetadata;
 				break;
+			}
 
 			// ── Etapa 2: lê JSON de metadados (BPM, offset, notas) ──────
 			case State.ReadMetadata:

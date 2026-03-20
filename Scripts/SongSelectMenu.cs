@@ -24,16 +24,13 @@ public partial class SongSelectMenu : Control
     private AudioStreamPlayer _previewPlayer;
     private Button _playingButton;
 
-    private static readonly Color PlayingColor = new(0.2f, 0.9f, 1f);   // ciano
+    private static readonly Color PlayingColor = new(0.2f, 0.9f, 1f);
 
     private readonly List<Button> _songButtons = new();
 
-    // Extensões de áudio reconhecidas (em ordem de prioridade dentro de uma pasta)
-    // .opus NÃO está na lista — Godot 4 não suporta o formato Opus.
     private static readonly string[] FolderAudioCandidates =
         { "song.ogg", "guitar.ogg", "backing.ogg", "song.mp3", "song.wav" };
 
-    // Extensões para varredura de arquivos soltos
     private static readonly string[] LooseAudioExtensions =
         { ".ogg", ".mp3", ".wav" };
 
@@ -83,7 +80,7 @@ public partial class SongSelectMenu : Control
     {
         if (_songList == null) return;
 
-        var songs = FindAllSongs("res://Audio/");
+        var songs = FindAllSongs("res://Audio");
 
         if (songs.Count == 0)
         {
@@ -108,7 +105,6 @@ public partial class SongSelectMenu : Control
             btn.AddThemeFontSizeOverride("font_size", 22);
             btn.Pressed += () => OnSongSelected(capturedPath, capturedName);
 
-            // Auto-scroll e preview de áudio ao receber foco
             btn.FocusEntered += () =>
             {
                 _scrollContainer?.EnsureControlVisible(btn);
@@ -120,36 +116,23 @@ public partial class SongSelectMenu : Control
             _songButtons.Add(btn);
         }
 
-        // Configura vizinhos de foco para que a navegação percorra todos os
-        // botões dentro do ScrollContainer antes de sair para MissSfxCheck/BackButton
         CallDeferred(MethodName.SetupFocusNeighbors);
 
         if (_songButtons.Count > 0)
             _songButtons[0].CallDeferred(Control.MethodName.GrabFocus);
     }
 
-    /// <summary>
-    /// Configura FocusNeighborBottom/Top de cada botão para que a navegação
-    /// por D-pad/analógico percorra toda a lista antes de sair do ScrollContainer.
-    /// O último botão aponta para MissSfxCheck; MissSfxCheck aponta de volta
-    /// para o último botão ao subir.
-    /// </summary>
     private void SetupFocusNeighbors()
     {
         for (int i = 0; i < _songButtons.Count; i++)
         {
             var btn = _songButtons[i];
-
-            // Vizinho de cima: botão anterior (primeiro botão não define → mantém padrão)
             if (i > 0)
                 btn.FocusNeighborTop = _songButtons[i - 1].GetPath();
-
-            // Vizinho de baixo: próximo botão na lista
             if (i < _songButtons.Count - 1)
                 btn.FocusNeighborBottom = _songButtons[i + 1].GetPath();
         }
 
-        // Último botão → MissSfxCheck (se existir) ou BackButton
         if (_songButtons.Count > 0)
         {
             var lastBtn = _songButtons[^1];
@@ -180,14 +163,12 @@ public partial class SongSelectMenu : Control
         string dir      = DirOf(audioPath);
         string basePath = StripExt(audioPath);
 
-        // Procura chart: notes.chart → [nome].chart → notes.mid
         string chartPath = FileAccess.FileExists(dir + "notes.chart")
             ? dir + "notes.chart"
             : basePath + ".chart";
 
         var difficulties = ChartImporter.ScanDifficulties(chartPath);
 
-        // Fallback: tenta notes.mid (formato Rock Band / Harmonix)
         if (difficulties.Count == 0)
         {
             string midiPath = dir + "notes.mid";
@@ -210,14 +191,12 @@ public partial class SongSelectMenu : Control
 
     private void SetPlayingButton(Button btn)
     {
-        // Remove indicação visual do botão anterior
         if (_playingButton != null && IsInstanceValid(_playingButton))
         {
             _playingButton.RemoveThemeColorOverride("font_color");
             _playingButton.Text = _playingButton.Text.TrimStart('♪', ' ');
         }
 
-        // Aplica indicação visual no botão atual
         _playingButton = btn;
         btn.AddThemeColorOverride("font_color", PlayingColor);
         if (!btn.Text.StartsWith("♪"))
@@ -236,112 +215,71 @@ public partial class SongSelectMenu : Control
 
     private static List<(string audioPath, string displayName)> FindAllSongs(string baseDir)
     {
-        var result = new List<(string, string)>();
-        var access = DirAccess.Open(baseDir);
-        if (access == null) return result;
+        var result = new List<(string audioPath, string displayName)>();
 
-        access.ListDirBegin();
-        string entry = access.GetNext();
-        while (entry != "")
+        string[] dirs  = DirAccess.GetDirectoriesAt(baseDir);
+        string[] files = DirAccess.GetFilesAt(baseDir);
+
+        GD.Print($"[SongSelect] {baseDir} → dirs={dirs.Length} files={files.Length}");
+
+        foreach (string dir in dirs)
         {
-            string full = baseDir.TrimEnd('/') + "/" + entry;
+            string full = baseDir.TrimEnd('/') + "/" + dir + "/";
+            var song = TryScanSongFolder(full);
+            if (song.HasValue) result.Add(song.Value);
+        }
 
-            if (access.CurrentIsDir())
+        foreach (string file in files)
+        {
+            string lower = file.ToLower();
+            foreach (var ext in LooseAudioExtensions)
             {
-                // Pasta no formato Clone Hero / Enchor
-                var song = TryScanSongFolder(full + "/");
-                if (song.HasValue) result.Add(song.Value);
-            }
-            else
-            {
-                // Arquivo de áudio solto na raiz de res://Audio/
-                foreach (var ext in LooseAudioExtensions)
+                if (lower.EndsWith(ext))
                 {
-                    if (entry.ToLower().EndsWith(ext))
-                    {
-                        result.Add((full, CleanName(entry)));
-                        break;
-                    }
+                    result.Add((baseDir.TrimEnd('/') + "/" + file, CleanName(file)));
+                    break;
                 }
             }
-
-            entry = access.GetNext();
         }
-        access.ListDirEnd();
+
         return result;
     }
 
-    /// <summary>
-    /// Verifica se a pasta tem pelo menos um arquivo de áudio reconhecido E importado.
-    /// Prioridade: candidatos padrão com .import → qualquer áudio com .import → candidatos sem .import.
-    /// Retorna o caminho do áudio e o nome para exibição (via song.ini ou nome da pasta).
-    /// </summary>
     private static (string audioPath, string displayName)? TryScanSongFolder(string dir)
     {
         string audioPath = null;
 
-        // 1ª passagem: candidato padrão que já foi importado pelo Godot (.import presente)
+        // 1ª passagem: candidatos padrão via ResourceLoader (funciona no PCK do Android)
         foreach (var candidate in FolderAudioCandidates)
         {
             string p = dir + candidate;
-            if (FileAccess.FileExists(p) && FileAccess.FileExists(p + ".import"))
-            {
-                audioPath = p;
-                break;
-            }
+            if (ResourceLoader.Exists(p)) { audioPath = p; break; }
         }
 
-        // 2ª passagem: qualquer arquivo de áudio na pasta que possua .import
+        // 2ª passagem: qualquer áudio na pasta
         if (audioPath == null)
         {
-            var access = DirAccess.Open(dir);
-            if (access != null)
+            foreach (string entry in DirAccess.GetFilesAt(dir.TrimEnd('/')))
             {
-                access.ListDirBegin();
-                string entry = access.GetNext();
-                while (entry != "" && audioPath == null)
+                string lower = entry.ToLower();
+                foreach (var ext in LooseAudioExtensions)
                 {
-                    if (!access.CurrentIsDir())
-                    {
-                        string lower = entry.ToLower();
-                        foreach (var ext in LooseAudioExtensions)
-                        {
-                            if (lower.EndsWith(ext) && FileAccess.FileExists(dir + entry + ".import"))
-                            {
-                                audioPath = dir + entry;
-                                break;
-                            }
-                        }
-                    }
-                    entry = access.GetNext();
+                    if (lower.EndsWith(ext)) { audioPath = dir + entry; break; }
                 }
-                access.ListDirEnd();
-            }
-        }
-
-        // 3ª passagem (fallback): candidato padrão mesmo sem .import
-        // (permite carregar se o Godot importar em tempo de execução ou no próximo scan)
-        if (audioPath == null)
-        {
-            foreach (var candidate in FolderAudioCandidates)
-            {
-                string p = dir + candidate;
-                if (FileAccess.FileExists(p)) { audioPath = p; break; }
+                if (audioPath != null) break;
             }
         }
 
         if (audioPath == null) return null;
 
-        // Nome padrão = nome da pasta
         string folderName = dir.TrimEnd('/');
         folderName = folderName[(folderName.LastIndexOf('/') + 1)..];
 
-        // Sobrescreve com song.ini se disponível
         string iniPath = dir + "song.ini";
-        if (FileAccess.FileExists(iniPath))
+        if (FileAccess.FileExists(iniPath) || ResourceLoader.Exists(iniPath))
         {
-            var info        = SongIniReader.Read(iniPath);
-            string fromIni  = SongIniReader.BuildDisplayName(info, folderName);
+            var info       = SongIniReader.Read(iniPath);
+            string fromIni = SongIniReader.BuildDisplayName(info, folderName);
             if (!string.IsNullOrEmpty(fromIni)) folderName = fromIni;
         }
 
@@ -362,7 +300,6 @@ public partial class SongSelectMenu : Control
         return dot >= 0 ? path[..dot] : path;
     }
 
-    /// <summary>Remove extensão e numeração inicial: "02 Master of Puppets.ogg" → "Master of Puppets"</summary>
     private static string CleanName(string fileName)
     {
         int dot = fileName.LastIndexOf('.');

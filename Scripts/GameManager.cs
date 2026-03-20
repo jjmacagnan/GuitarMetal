@@ -187,6 +187,7 @@ public partial class GameManager : Node3D
 		InitParticlePool();
 		InitHoldParticlePool();
 		BuildPauseOverlay();
+		BuildTouchPauseButton();
 		UpdateHUD();
 	}
 
@@ -301,6 +302,40 @@ public partial class GameManager : Node3D
 		_pauseOverlay.AddChild(vbox);
 		_pauseOverlay.Hide();
 		hud.AddChild(_pauseOverlay);
+	}
+
+	/// <summary>
+	/// Cria um botão flutuante de pausa no canto superior direito do HUD.
+	/// Visível apenas em dispositivos touch (Android). Em desktop, o jogador
+	/// usa ESC ou o botão Start do gamepad.
+	/// </summary>
+	private void BuildTouchPauseButton()
+	{
+		var hud = GetNodeOrNull<CanvasLayer>("HUD");
+		if (hud == null) return;
+
+		var btn = new Button
+		{
+			Text              = "⏸",
+			CustomMinimumSize = new Vector2(80, 80),
+			FocusMode         = Control.FocusModeEnum.None,
+			ProcessMode       = ProcessModeEnum.Always,  // funciona com a tree pausada
+		};
+		btn.AddThemeFontSizeOverride("font_size", 38);
+
+		// Ancora ao canto superior direito com margem de 10 px
+		btn.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.TopRight);
+		btn.OffsetLeft   = -90f;
+		btn.OffsetRight  = -10f;
+		btn.OffsetTop    =  10f;
+		btn.OffsetBottom =  90f;
+
+		btn.Pressed += () =>
+		{
+			if (!_songEnded) TogglePause();
+		};
+
+		hud.AddChild(btn);
 	}
 
 	private static Button MakePauseButton(string text, Action callback)
