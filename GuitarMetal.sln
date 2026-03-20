@@ -1,6 +1,6 @@
 ﻿Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GuitarHeroClone", "GuitarHeroClone.csproj", "{4DC85D22-4A29-479E-A9F7-72786AC93A1D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GuitarMetal", "GuitarMetal.csproj", "{4DC85D22-4A29-479E-A9F7-72786AC93A1D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

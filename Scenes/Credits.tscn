@@ -121,7 +121,7 @@ text = "GitHub (projeto):"
 layout_mode = 2
 theme_override_colors/font_color = Color(0.4, 0.8, 1, 1)
 theme_override_font_sizes/font_size = 15
-text = "https://github.com/jjmacagnan/GuitarHero"
+text = "https://github.com/jjmacagnan/GuitarMetal"
 
 [node name="LinkedInRow" type="HBoxContainer" parent="VBox/Scroll/Content"]
 layout_mode = 2

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 
 /// <summary>
-/// Importa charts no formato .chart (Clone Hero / Guitar Hero).
+/// Importa charts no formato .chart (Clone Hero).
 ///
 /// Formato suportado:
 ///   [Song]       → metadados (Name, Resolution, Offset)

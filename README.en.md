@@ -3,7 +3,7 @@
 [![🇧🇷 Português](https://img.shields.io/badge/lang-Português-green?style=flat-square)](README.md)
 [![🇺🇸 English](https://img.shields.io/badge/lang-English-blue?style=flat-square)](README.en.md)
 
-A rhythm game in the style of Guitar Hero, built from scratch with Godot 4.6 and C#. Supports Clone Hero (`.chart`) and Rock Band (`.mid`) chart formats, hold notes, difficulty selection, simultaneous gamepad and keyboard input, local leaderboard, and PT/EN internationalization.
+A rhythm game inspired by Guitar Hero, built from scratch with Godot 4.6 and C#. Supports Clone Hero (`.chart`) and Rock Band (`.mid`) chart formats, hold notes, difficulty selection, simultaneous gamepad and keyboard input, local leaderboard, and PT/EN internationalization.
 
 > Project developed for the **Mobile Game Development** course, part of the **Mobile Devices Programming Specialization** offered by **UTFPR — Federal University of Technology of Paraná, Brazil**.
 

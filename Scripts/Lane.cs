@@ -82,7 +82,7 @@ public partial class Lane : Node3D
 		};
 		_buttonBaseMesh.MaterialOverride = _buttonBaseMat;
 
-		// 3. Cap do botão — dome esférico estilo Guitar Hero
+		// 3. Cap do botão — dome esférico estilo Guitar Metal
 		_buttonCapMesh = GetNodeOrNull<MeshInstance3D>("ButtonCap");
 		if (_buttonCapMesh == null)
 		{

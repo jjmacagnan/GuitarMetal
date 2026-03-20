@@ -28,7 +28,7 @@ public static class Locale
     private static readonly Dictionary<string, Dictionary<Language, string>> Strings = new()
     {
         // ── Menu Principal ─────────────────────────────────────────────
-        ["TITLE"]           = new() { [Language.PT] = "GUITAR HERO 3D",       [Language.EN] = "GUITAR HERO 3D" },
+        ["TITLE"]           = new() { [Language.PT] = "GUITAR METAL",         [Language.EN] = "GUITAR METAL" },
         ["PLAY"]            = new() { [Language.PT] = "Jogar",                [Language.EN] = "Play" },
         ["QUIT"]            = new() { [Language.PT] = "Sair",                 [Language.EN] = "Quit" },
         ["LANGUAGE"]        = new() { [Language.PT] = "Idioma: Português",    [Language.EN] = "Language: English" },
