@@ -249,7 +249,7 @@ public partial class SettingsMenu : Control
 	{
 		if (_listeningLane >= 0) CancelListening();
 		KeybindingStorage.Save();
-		GetTree().ChangeSceneToFile("res://Scenes/MainMenu.tscn");
+		GetTree().ChangeSceneToFile(ScenePaths.MainMenu);
 	}
 
 	// ── Flash "Salvo!" ────────────────────────────────────────────────────

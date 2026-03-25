@@ -68,7 +68,7 @@ public partial class NameInput : Control
 	{
 		if (@event.IsActionPressed("ui_cancel"))
 		{
-			GetTree().ChangeSceneToFile("res://Scenes/MainMenu.tscn");
+			GetTree().ChangeSceneToFile(ScenePaths.MainMenu);
 			GetViewport().SetInputAsHandled();
 			return;
 		}
@@ -317,6 +317,6 @@ public partial class NameInput : Control
 
 		GameData.PlayerName = name;
 		ScoreStorage.SavePlayerName(name);
-		GetTree().ChangeSceneToFile("res://Scenes/SongSelect.tscn");
+		GetTree().ChangeSceneToFile(ScenePaths.SongSelect);
 	}
 }

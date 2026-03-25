@@ -37,7 +37,7 @@ public partial class DifficultySelect : Control
 		{
 			backButton.Text = Locale.Tr("BACK");
 			backButton.Connect("pressed", Callable.From(
-				() => GetTree().ChangeSceneToFile("res://Scenes/SongSelect.tscn")));
+				() => GetTree().ChangeSceneToFile(ScenePaths.SongSelect)));
 		}
 
 		// Grid de dificuldades
@@ -76,7 +76,7 @@ public partial class DifficultySelect : Control
 			grid.AddChild(msg);
 
 			var timer = GetTree().CreateTimer(2.0f);
-			timer.Timeout += () => GetTree().ChangeSceneToFile("res://Scenes/SongSelect.tscn");
+			timer.Timeout += () => GetTree().ChangeSceneToFile(ScenePaths.SongSelect);
 			return;
 		}
 
@@ -89,7 +89,7 @@ public partial class DifficultySelect : Control
 		// B (ui_cancel) → volta à seleção de música
 		if (@event.IsActionPressed("ui_cancel"))
 		{
-			GetTree().ChangeSceneToFile("res://Scenes/SongSelect.tscn");
+			GetTree().ChangeSceneToFile(ScenePaths.SongSelect);
 			GetViewport().SetInputAsHandled();
 		}
 	}
@@ -97,7 +97,7 @@ public partial class DifficultySelect : Control
 	private void OnDifficultySelected(string difficulty)
 	{
 		GameData.SelectedDifficulty = difficulty;
-		GetTree().ChangeSceneToFile("res://Scenes/Loading.tscn");
+		GetTree().ChangeSceneToFile(ScenePaths.Loading);
 	}
 
 	// ── UI Builder ─────────────────────────────────────────────────────────

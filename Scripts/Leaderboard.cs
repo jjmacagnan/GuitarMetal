@@ -57,8 +57,8 @@ public partial class Leaderboard : Control
 		{
 			_backButton.Text = Locale.Tr("BACK");
 			// ensure back action is connected
-			_backButton.Pressed -= () => GetTree().ChangeSceneToFile("res://Scenes/MainMenu.tscn");
-			_backButton.Pressed += () => GetTree().ChangeSceneToFile("res://Scenes/MainMenu.tscn");
+			_backButton.Pressed -= () => GetTree().ChangeSceneToFile(ScenePaths.MainMenu);
+			_backButton.Pressed += () => GetTree().ChangeSceneToFile(ScenePaths.MainMenu);
 		}
 		if (_hintLabel != null) _hintLabel.Text = Locale.Tr("SELECT_SONG_LB");
 		if (_clearButton != null) _clearButton.Text = Locale.Tr("CLEAR_SCORES");
@@ -68,7 +68,7 @@ public partial class Leaderboard : Control
 	{
 		if (@event.IsActionPressed("ui_cancel"))
 		{
-			GetTree().ChangeSceneToFile("res://Scenes/MainMenu.tscn");
+			GetTree().ChangeSceneToFile(ScenePaths.MainMenu);
 			GetViewport().SetInputAsHandled();
 		}
 	}

@@ -169,14 +169,14 @@ public partial class GameManager : Node3D
 	private void OnRestartRequested()
 	{
 		if (GameData.AvailableDifficulties != null && GameData.AvailableDifficulties.Count > 1)
-			GetTree().ChangeSceneToFile("res://Scenes/DifficultySelect.tscn");
+			GetTree().ChangeSceneToFile(ScenePaths.DifficultySelect);
 		else
 			GetTree().ReloadCurrentScene();
 	}
 
 	private void OnQuitRequested()
 	{
-		GetTree().ChangeSceneToFile("res://Scenes/SongSelect.tscn");
+		GetTree().ChangeSceneToFile(ScenePaths.SongSelect);
 	}
 
 	// ── _Process ───────────────────────────────────────────────────────────
@@ -311,7 +311,7 @@ public partial class GameManager : Node3D
 	private void ScheduleResultsTransition()
 	{
 		var t = GetTree().CreateTimer(1f);
-		t.Timeout += () => GetTree().ChangeSceneToFile("res://Scenes/Results.tscn");
+		t.Timeout += () => GetTree().ChangeSceneToFile(ScenePaths.Results);
 	}
 
 	// ── UI ─────────────────────────────────────────────────────────────────

@@ -52,11 +52,11 @@ public partial class MainMenu : Control
 		}
 	}
 
-	private void OnPlayPressed()         => GetTree().ChangeSceneToFile("res://Scenes/NameInput.tscn");
+	private void OnPlayPressed()         => GetTree().ChangeSceneToFile(ScenePaths.NameInput);
 	private void OnQuitPressed()         => GetTree().Quit();
-	private void OnLeaderboardPressed()  => GetTree().ChangeSceneToFile("res://Scenes/Leaderboard.tscn");
-	private void OnCreditsPressed()      => GetTree().ChangeSceneToFile("res://Scenes/Credits.tscn");
-	private void OnSettingsPressed()     => GetTree().ChangeSceneToFile("res://Scenes/Settings.tscn");
+	private void OnLeaderboardPressed()  => GetTree().ChangeSceneToFile(ScenePaths.Leaderboard);
+	private void OnCreditsPressed()      => GetTree().ChangeSceneToFile(ScenePaths.Credits);
+	private void OnSettingsPressed()     => GetTree().ChangeSceneToFile(ScenePaths.Settings);
 
 	private void OnLanguageToggle()
 	{

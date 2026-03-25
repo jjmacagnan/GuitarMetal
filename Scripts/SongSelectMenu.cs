@@ -42,7 +42,7 @@ public partial class SongSelectMenu : Control
         _titleLabel      = GetNodeOrNull<Label>("VBox/TitleLabel");
         _backButton      = GetNodeOrNull<Button>("VBox/BackButton");
 
-        _backButton?.Connect("pressed", Callable.From(() => GetTree().ChangeSceneToFile("res://Scenes/MainMenu.tscn")));
+        _backButton?.Connect("pressed", Callable.From(() => GetTree().ChangeSceneToFile(ScenePaths.MainMenu)));
 
         _previewPlayer = new AudioStreamPlayer { VolumeDb = -8f };
         AddChild(_previewPlayer);
@@ -62,7 +62,7 @@ public partial class SongSelectMenu : Control
     {
         if (@event.IsActionPressed("ui_cancel"))
         {
-            GetTree().ChangeSceneToFile("res://Scenes/MainMenu.tscn");
+            GetTree().ChangeSceneToFile(ScenePaths.MainMenu);
             GetViewport().SetInputAsHandled();
         }
     }
@@ -178,12 +178,12 @@ public partial class SongSelectMenu : Control
         if (difficulties.Count > 1)
         {
             GameData.AvailableDifficulties = difficulties;
-            GetTree().ChangeSceneToFile("res://Scenes/DifficultySelect.tscn");
+            GetTree().ChangeSceneToFile(ScenePaths.DifficultySelect);
         }
         else
         {
             if (difficulties.Count == 1) GameData.SelectedDifficulty = difficulties[0];
-            GetTree().ChangeSceneToFile("res://Scenes/Loading.tscn");
+            GetTree().ChangeSceneToFile(ScenePaths.Loading);
         }
     }
 
