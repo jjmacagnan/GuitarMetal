@@ -60,9 +60,7 @@ public partial class MainMenu : Control
 
 	private void OnLanguageToggle()
 	{
-		Locale.Current = Locale.Current == Locale.Language.PT
-			? Locale.Language.EN
-			: Locale.Language.PT;
+		Locale.CycleLanguage();
 		ApplyLocale();
 	}
 

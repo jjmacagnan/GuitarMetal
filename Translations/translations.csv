@@ -1,91 +1,91 @@
-key,pt,en
-TITLE,GUITAR METAL,GUITAR METAL
-PLAY,Jogar,Play
-QUIT,Sair,Quit
-LANGUAGE,"Idioma: Português","Language: English"
-CONTROLS_HINT,"[A] Verde   [S] Vermelho   [J] Amarelo   [K] Azul   [L] Laranja","[A] Green   [S] Red   [J] Yellow   [K] Blue   [L] Orange"
-CONTROLS_HINT_GAME,"[A] Verde   [S] Vermelho   [J] Amarelo   [K] Azul   [L] Laranja   |   [ESC] Pausar","[A] Green   [S] Red   [J] Yellow   [K] Blue   [L] Orange   |   [ESC] Pause"
-SELECT_SONG,Selecionar Música,Select Song
-BACK,← Voltar,← Back
-MISS_SFX_OPTION,"Som de erro (tecla sem nota)","Error sound (key without note)"
-NO_SONGS,"Nenhuma música encontrada em res://Audio/","No songs found in res://Audio/"
-DIFFICULTY,Dificuldade,Difficulty
-EASY,Fácil,Easy
-MEDIUM,Médio,Medium
-HARD,Difícil,Hard
-EXPERT,Expert,Expert
-NO_DIFFICULTY,"Nenhuma dificuldade encontrada neste chart.","No difficulty found in this chart."
-LOADING,Carregando,Loading
-LOADING_INIT,Inicializando...,Initializing...
-LOADING_AUDIO,"Lendo arquivo de áudio...","Reading audio file..."
-LOADING_META,"Lendo metadados da música...","Reading song metadata..."
-LOADING_NOTES_FMT,"Gerando notas (BPM {0}, {1} beats)...","Generating notes (BPM {0}, {1} beats)..."
-LOADING_READY,Pronto!,Ready!
-ERR_NOT_FOUND,"arquivo não encontrado","file not found"
-ERR_NOT_IMPORTED,"não importado (abra o editor Godot para importar)","not imported (open Godot editor to import)"
-ERR_UNSUPPORTED,"formato não suportado (.opus não é aceito — use .ogg/.mp3/.wav)","unsupported format (.opus not accepted — use .ogg/.mp3/.wav)"
-PAUSED,Pausado,Paused
-RESUME,Continuar,Resume
-RESTART,Recomeçar,Restart
-QUIT_TO_MENU,Sair para Menu,Quit to Menu
-PERFECT,Perfect!,Perfect!
-GREAT,Great,Great
-GOOD,Good,Good
-HOLD,Hold!,Hold!
-MISS,Miss,Miss
-COMBO_FMT,x{0} Combo,x{0} Combo
-RESULT,Resultado,Results
-SCORE_FMT,"Score: {0}","Score: {0}"
-ACCURACY_FMT,"Precisão: {0}%","Accuracy: {0}%"
-HITS_FMT,"Acertos: {0} / {1}","Hits: {0} / {1}"
-MISSES_FMT,"Erros: {0}","Misses: {0}"
-HOLDS_FMT,"Holds completos: {0}","Holds completed: {0}"
-MAX_COMBO_FMT,"Max Combo: {0}x","Max Combo: {0}x"
-PLAY_AGAIN,Jogar Novamente,Play Again
-VIEW_LEADERBOARD,Ver Placar,View Leaderboard
-MAIN_MENU,Menu Principal,Main Menu
-ENTER_NAME,Digite Seu Nome,Enter Your Name
-CONFIRM,Confirmar,Confirm
-NAME_PLACEHOLDER,Seu nome...,Your name...
-PLAYER_FMT,"Jogador: {0}","Player: {0}"
-LEADERBOARD,Ranking,Leaderboard
-RANK,#,#
-PLAYER,Jogador,Player
-NO_SCORES,"Nenhum score registrado.","No scores recorded."
-SELECT_SONG_LB,"Selecione uma música para ver o ranking","Select a song to view the ranking"
-KB_SPACE,Espaço,Space
-KB_BACKSPACE,Apagar,Delete
-KB_CLEAR,Limpar,Clear
-CLEAR_SCORES,Limpar Scores,Clear Scores
-LANE_HINT_FMT,"[{0}] {1}","[{0}] {1}"
-GAMEPAD_LANE_HINT_FMT,"({0}) {1}","({0}) {1}"
-KEYBOARD_PREFIX,Teclado:,Keyboard:
-GAMEPAD_PREFIX,Controle:,Gamepad:
-PAUSE_HINT,"[ESC] Pausar","[ESC] Pause"
-GAMEPAD_PAUSE_HINT,"[+] Pausar","[+] Pause"
-SETTINGS,Configurações,Settings
-SETTINGS_TITLE,Configurações,Settings
-KEYBOARD_TAB,Teclado,Keyboard
-GAMEPAD_TAB,Controle,Gamepad
-LANE_GREEN,Verde,Green
-LANE_RED,Vermelho,Red
-LANE_YELLOW,Amarelo,Yellow
-LANE_BLUE,Azul,Blue
-LANE_ORANGE,Laranja,Orange
-PRESS_KEY,"[ Pressione uma tecla ]","[ Press a key ]"
-PRESS_BUTTON,"[ Pressione um botão ]","[ Press a button ]"
-RESET_DEFAULTS,Restaurar Padrões,Reset to Defaults
-SETTINGS_SAVED,Salvo!,Saved!
-CREDITS,Créditos,Credits
-CREDITS_TITLE,Créditos e Licença,Credits & License
-CREDITS_ABOUT_TITLE,Sobre o Projeto,About the Project
-CREDITS_ABOUT_TEXT,"Projeto desenvolvido para a disciplina de Desenvolvimento de Jogos para Smartphones, integrante da Especialização em Programação para Dispositivos Móveis oferecida pela UTFPR — Universidade Tecnológica Federal do Paraná.","Project developed for the Mobile Game Development course, part of the Mobile Devices Programming Specialization offered by UTFPR — Federal University of Technology of Paraná, Brazil."
-CREDITS_DEDICATION_TITLE,Dedicatória,Dedication
-CREDITS_DEDICATION_TEXT,"Dedicado à minha esposa Natalí, que ama música e inspira cada nota deste jogo. ♪","Dedicated to my wife Natalí, who loves music and inspires every note in this game. ♪"
-CREDITS_LICENSE_TITLE,Licença,License
-CREDITS_DEVELOPER,Desenvolvedor,Developer
-CREDITS_GITHUB_PROFILE,"GitHub (perfil):","GitHub (profile):"
-CREDITS_GITHUB_PROJECT,"GitHub (projeto):","GitHub (project):"
-CREDITS_LINKEDIN,LinkedIn:,LinkedIn:
-CREDITS_TECH,Tecnologia,Technology
-CREDITS_TECH_TEXT,"Godot 4.6  •  C#  •  .NET 8","Godot 4.6  •  C#  •  .NET 8"
+key,pt,en,es
+TITLE,GUITAR METAL,GUITAR METAL,GUITAR METAL
+PLAY,Jogar,Play,Jugar
+QUIT,Sair,Quit,Salir
+LANGUAGE,"Idioma: Português","Language: English","Idioma: Español"
+CONTROLS_HINT,"[A] Verde   [S] Vermelho   [J] Amarelo   [K] Azul   [L] Laranja","[A] Green   [S] Red   [J] Yellow   [K] Blue   [L] Orange","[A] Verde   [S] Rojo   [J] Amarillo   [K] Azul   [L] Naranja"
+CONTROLS_HINT_GAME,"[A] Verde   [S] Vermelho   [J] Amarelo   [K] Azul   [L] Laranja   |   [ESC] Pausar","[A] Green   [S] Red   [J] Yellow   [K] Blue   [L] Orange   |   [ESC] Pause","[A] Verde   [S] Rojo   [J] Amarillo   [K] Azul   [L] Naranja   |   [ESC] Pausa"
+SELECT_SONG,Selecionar Música,Select Song,Seleccionar Canción
+BACK,← Voltar,← Back,← Volver
+MISS_SFX_OPTION,"Som de erro (tecla sem nota)","Error sound (key without note)","Sonido de error (tecla sin nota)"
+NO_SONGS,"Nenhuma música encontrada em res://Audio/","No songs found in res://Audio/","No se encontraron canciones en res://Audio/"
+DIFFICULTY,Dificuldade,Difficulty,Dificultad
+EASY,Fácil,Easy,Fácil
+MEDIUM,Médio,Medium,Medio
+HARD,Difícil,Hard,Difícil
+EXPERT,Expert,Expert,Experto
+NO_DIFFICULTY,"Nenhuma dificuldade encontrada neste chart.","No difficulty found in this chart.","No se encontró dificultad en este chart."
+LOADING,Carregando,Loading,Cargando
+LOADING_INIT,Inicializando...,Initializing...,Inicializando...
+LOADING_AUDIO,"Lendo arquivo de áudio...","Reading audio file...","Leyendo archivo de audio..."
+LOADING_META,"Lendo metadados da música...","Reading song metadata...","Leyendo metadatos de la canción..."
+LOADING_NOTES_FMT,"Gerando notas (BPM {0}, {1} beats)...","Generating notes (BPM {0}, {1} beats)...","Generando notas (BPM {0}, {1} beats)..."
+LOADING_READY,Pronto!,Ready!,¡Listo!
+ERR_NOT_FOUND,"arquivo não encontrado","file not found","archivo no encontrado"
+ERR_NOT_IMPORTED,"não importado (abra o editor Godot para importar)","not imported (open Godot editor to import)","no importado (abra el editor Godot para importar)"
+ERR_UNSUPPORTED,"formato não suportado (.opus não é aceito — use .ogg/.mp3/.wav)","unsupported format (.opus not accepted — use .ogg/.mp3/.wav)","formato no soportado (.opus no es aceptado — use .ogg/.mp3/.wav)"
+PAUSED,Pausado,Paused,Pausado
+RESUME,Continuar,Resume,Continuar
+RESTART,Recomeçar,Restart,Reiniciar
+QUIT_TO_MENU,Sair para Menu,Quit to Menu,Salir al Menú
+PERFECT,Perfect!,Perfect!,¡Perfecto!
+GREAT,Great,Great,Genial
+GOOD,Good,Good,Bien
+HOLD,Hold!,Hold!,¡Hold!
+MISS,Miss,Miss,Fallo
+COMBO_FMT,x{0} Combo,x{0} Combo,x{0} Combo
+RESULT,Resultado,Results,Resultado
+SCORE_FMT,"Score: {0}","Score: {0}","Puntos: {0}"
+ACCURACY_FMT,"Precisão: {0}%","Accuracy: {0}%","Precisión: {0}%"
+HITS_FMT,"Acertos: {0} / {1}","Hits: {0} / {1}","Aciertos: {0} / {1}"
+MISSES_FMT,"Erros: {0}","Misses: {0}","Fallos: {0}"
+HOLDS_FMT,"Holds completos: {0}","Holds completed: {0}","Holds completos: {0}"
+MAX_COMBO_FMT,"Max Combo: {0}x","Max Combo: {0}x","Max Combo: {0}x"
+PLAY_AGAIN,Jogar Novamente,Play Again,Jugar de Nuevo
+VIEW_LEADERBOARD,Ver Placar,View Leaderboard,Ver Clasificación
+MAIN_MENU,Menu Principal,Main Menu,Menú Principal
+ENTER_NAME,Digite Seu Nome,Enter Your Name,Ingrese Su Nombre
+CONFIRM,Confirmar,Confirm,Confirmar
+NAME_PLACEHOLDER,Seu nome...,Your name...,Su nombre...
+PLAYER_FMT,"Jogador: {0}","Player: {0}","Jugador: {0}"
+LEADERBOARD,Ranking,Leaderboard,Clasificación
+RANK,#,#,#
+PLAYER,Jogador,Player,Jugador
+NO_SCORES,"Nenhum score registrado.","No scores recorded.","No hay puntuaciones registradas."
+SELECT_SONG_LB,"Selecione uma música para ver o ranking","Select a song to view the ranking","Seleccione una canción para ver la clasificación"
+KB_SPACE,Espaço,Space,Espacio
+KB_BACKSPACE,Apagar,Delete,Borrar
+KB_CLEAR,Limpar,Clear,Limpiar
+CLEAR_SCORES,Limpar Scores,Clear Scores,Borrar Puntuaciones
+LANE_HINT_FMT,"[{0}] {1}","[{0}] {1}","[{0}] {1}"
+GAMEPAD_LANE_HINT_FMT,"({0}) {1}","({0}) {1}","({0}) {1}"
+KEYBOARD_PREFIX,Teclado:,Keyboard:,Teclado:
+GAMEPAD_PREFIX,Controle:,Gamepad:,Mando:
+PAUSE_HINT,"[ESC] Pausar","[ESC] Pause","[ESC] Pausa"
+GAMEPAD_PAUSE_HINT,"[+] Pausar","[+] Pause","[+] Pausa"
+SETTINGS,Configurações,Settings,Configuración
+SETTINGS_TITLE,Configurações,Settings,Configuración
+KEYBOARD_TAB,Teclado,Keyboard,Teclado
+GAMEPAD_TAB,Controle,Gamepad,Mando
+LANE_GREEN,Verde,Green,Verde
+LANE_RED,Vermelho,Red,Rojo
+LANE_YELLOW,Amarelo,Yellow,Amarillo
+LANE_BLUE,Azul,Blue,Azul
+LANE_ORANGE,Laranja,Orange,Naranja
+PRESS_KEY,"[ Pressione uma tecla ]","[ Press a key ]","[ Presione una tecla ]"
+PRESS_BUTTON,"[ Pressione um botão ]","[ Press a button ]","[ Presione un botón ]"
+RESET_DEFAULTS,Restaurar Padrões,Reset to Defaults,Restaurar Valores
+SETTINGS_SAVED,Salvo!,Saved!,¡Guardado!
+CREDITS,Créditos,Credits,Créditos
+CREDITS_TITLE,Créditos e Licença,Credits & License,Créditos y Licencia
+CREDITS_ABOUT_TITLE,Sobre o Projeto,About the Project,Sobre el Proyecto
+CREDITS_ABOUT_TEXT,"Projeto desenvolvido para a disciplina de Desenvolvimento de Jogos para Smartphones, integrante da Especialização em Programação para Dispositivos Móveis oferecida pela UTFPR — Universidade Tecnológica Federal do Paraná.","Project developed for the Mobile Game Development course, part of the Mobile Devices Programming Specialization offered by UTFPR — Federal University of Technology of Paraná, Brazil.","Proyecto desarrollado para la asignatura de Desarrollo de Juegos para Smartphones, parte de la Especialización en Programación para Dispositivos Móviles ofrecida por la UTFPR — Universidad Tecnológica Federal de Paraná, Brasil."
+CREDITS_DEDICATION_TITLE,Dedicatória,Dedication,Dedicatoria
+CREDITS_DEDICATION_TEXT,"Dedicado à minha esposa Natalí, que ama música e inspira cada nota deste jogo. ♪","Dedicated to my wife Natalí, who loves music and inspires every note in this game. ♪","Dedicado a mi esposa Natalí, que ama la música e inspira cada nota de este juego. ♪"
+CREDITS_LICENSE_TITLE,Licença,License,Licencia
+CREDITS_DEVELOPER,Desenvolvedor,Developer,Desarrollador
+CREDITS_GITHUB_PROFILE,"GitHub (perfil):","GitHub (profile):","GitHub (perfil):"
+CREDITS_GITHUB_PROJECT,"GitHub (projeto):","GitHub (project):","GitHub (proyecto):"
+CREDITS_LINKEDIN,LinkedIn:,LinkedIn:,LinkedIn:
+CREDITS_TECH,Tecnologia,Technology,Tecnología
+CREDITS_TECH_TEXT,"Godot 4.6  •  C#  •  .NET 8","Godot 4.6  •  C#  •  .NET 8","Godot 4.6  •  C#  •  .NET 8"

@@ -7,18 +7,37 @@ using Godot;
 /// </summary>
 public static class Locale
 {
-	public enum Language { PT, EN }
+	public enum Language { PT, EN, ES }
 
 	private const string CsvPath = "res://Translations/translations.csv";
 	private static bool _loaded;
 
 	public static Language Current
 	{
-		get => TranslationServer.GetLocale() == "pt" ? Language.PT : Language.EN;
-		set
+		get => TranslationServer.GetLocale() switch
 		{
-			TranslationServer.SetLocale(value == Language.PT ? "pt" : "en");
-		}
+			"pt" => Language.PT,
+			"es" => Language.ES,
+			_    => Language.EN
+		};
+		set => TranslationServer.SetLocale(value switch
+		{
+			Language.PT => "pt",
+			Language.ES => "es",
+			_           => "en"
+		});
+	}
+
+	/// <summary>Avança para o próximo idioma no ciclo PT → EN → ES → PT.</summary>
+	public static void CycleLanguage()
+	{
+		Current = Current switch
+		{
+			Language.PT => Language.EN,
+			Language.EN => Language.ES,
+			Language.ES => Language.PT,
+			_           => Language.PT
+		};
 	}
 
 	/// <summary>Retorna a string traduzida para o idioma ativo.</summary>
@@ -49,7 +68,7 @@ public static class Locale
 
 		// Define PT como locale padrão (comportamento anterior do campo estático)
 		string currentLocale = TranslationServer.GetLocale();
-		if (currentLocale != "pt" && currentLocale != "en")
+		if (currentLocale != "pt" && currentLocale != "en" && currentLocale != "es")
 			TranslationServer.SetLocale("pt");
 
 		// Se o TranslationServer já tem traduções (editor gerou os .translation), não precisa carregar
@@ -71,30 +90,29 @@ public static class Locale
 		using var file = FileAccess.Open(CsvPath, FileAccess.ModeFlags.Read);
 		if (file == null) return;
 
-		// Primeira linha: key,pt,en
+		// Primeira linha: key,pt,en,es,...
 		string header = file.GetLine();
-		string[] columns = header.Split(',');
-		if (columns.Length < 3) return;
+		var headerFields = ParseCsvLine(header);
+		if (headerFields.Length < 2) return;
 
-		// Identifica índices das colunas de locale
-		int ptIdx = -1, enIdx = -1;
-		for (int i = 1; i < columns.Length; i++)
+		// Cria uma Translation para cada coluna de locale encontrada
+		var translations = new System.Collections.Generic.Dictionary<int, Translation>();
+		for (int i = 1; i < headerFields.Length; i++)
 		{
-			string col = columns[i].Trim().ToLower();
-			if (col == "pt") ptIdx = i;
-			else if (col == "en") enIdx = i;
+			string locale = headerFields[i].Trim().ToLower();
+			if (!string.IsNullOrEmpty(locale))
+			{
+				var t = new Translation();
+				t.Locale = locale;
+				translations[i] = t;
+			}
 		}
 
-		if (ptIdx < 0 || enIdx < 0)
+		if (translations.Count == 0)
 		{
-			GD.PushError("[Locale] CSV header inválido — esperado: key,pt,en");
+			GD.PushError("[Locale] CSV header sem colunas de locale.");
 			return;
 		}
-
-		var ptTranslation = new Translation();
-		ptTranslation.Locale = "pt";
-		var enTranslation = new Translation();
-		enTranslation.Locale = "en";
 
 		while (!file.EofReached())
 		{
@@ -102,18 +120,22 @@ public static class Locale
 			if (string.IsNullOrWhiteSpace(line)) continue;
 
 			var fields = ParseCsvLine(line);
-			if (fields.Length < 3) continue;
+			if (fields.Length < 2) continue;
 
 			string key = fields[0].Trim();
 			if (string.IsNullOrEmpty(key)) continue;
 
-			if (ptIdx < fields.Length) ptTranslation.AddMessage(key, fields[ptIdx]);
-			if (enIdx < fields.Length) enTranslation.AddMessage(key, fields[enIdx]);
+			foreach (var (idx, translation) in translations)
+			{
+				if (idx < fields.Length)
+					translation.AddMessage(key, fields[idx]);
+			}
 		}
 
-		TranslationServer.AddTranslation(ptTranslation);
-		TranslationServer.AddTranslation(enTranslation);
-		GD.Print("[Locale] Traduções carregadas do CSV (fallback).");
+		foreach (var translation in translations.Values)
+			TranslationServer.AddTranslation(translation);
+
+		GD.Print($"[Locale] Traduções carregadas do CSV (fallback): {translations.Count} idiomas.");
 	}
 
 	/// <summary>
