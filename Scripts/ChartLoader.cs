@@ -103,6 +103,7 @@ public static class ChartLoader
 			});
 		}
 
+		notes.Sort((a, b) => a.Time.CompareTo(b.Time));
 		GD.Print($"[ChartLoader] .chart carregado: {notes.Count} notas, BPM={imported.BPM}, offset={startOffset:F3}s");
 
 		return new ChartResult
@@ -217,6 +218,7 @@ public static class ChartLoader
 			});
 		}
 
+		notes.Sort((a, b) => a.Time.CompareTo(b.Time));
 		GD.Print($"[ChartLoader] MIDI carregado: {notes.Count} notas, BPM={imported.BPM:F1}, offset={startOffset:F3}s");
 
 		return new ChartResult
