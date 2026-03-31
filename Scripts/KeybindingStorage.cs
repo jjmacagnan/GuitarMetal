@@ -162,7 +162,7 @@ public static class KeybindingStorage
 			kbParts[i] = Locale.Tr("LANE_HINT_FMT", keyName, laneName);
 
 			string gpName = _isAxis![i]
-				? AxisDisplayName(_axes![i])
+				? AxisDisplayName(_axes![i]) + (_axisValues![i] < 0 ? "−" : "+")
 				: ButtonDisplayName(_buttons![i]);
 			gpParts[i] = Locale.Tr("GAMEPAD_LANE_HINT_FMT", gpName, laneName);
 		}
