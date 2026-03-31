@@ -128,7 +128,7 @@ public partial class GameManager : Node3D
 		// 5. Toca música com delay sincronizado
 		if (_audio?.Stream != null)
 		{
-			double delay = _clock.GetAudioStartDelay(TravelTime, AudioLatencyOffset);
+			double delay = _clock.GetAudioStartDelay(TravelTime);
 			var t = GetTree().CreateTimer(delay);
 			t.Timeout += () => { _audio.Play(); };
 			double outputLatency = AudioServer.GetOutputLatency() + AudioLatencyOffset;

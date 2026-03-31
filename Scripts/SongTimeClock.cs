@@ -25,7 +25,7 @@ public class SongTimeClock
 	/// <summary>
 	/// Retorna o delay inicial antes de começar a tocar o áudio.
 	/// </summary>
-	public double GetAudioStartDelay(float travelTime, float audioLatencyOffset)
+	public double GetAudioStartDelay(float travelTime)
 	{
 		const double AudioDelay = 0.3;
 		return travelTime + AudioDelay;
