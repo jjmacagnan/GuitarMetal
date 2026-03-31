@@ -327,7 +327,7 @@ public partial class GameManager : Node3D
 
 	private void UpdateHUD()
 	{
-		if (_scoreLabel != null) _scoreLabel.Text = $"Score: {_scoring.Score:N0}";
+		if (_scoreLabel != null) _scoreLabel.Text = Locale.Tr("SCORE_FMT", _scoring.Score.ToString("N0"));
 		if (_comboLabel != null) _comboLabel.Text = _scoring.Combo > 1 ? Locale.Tr("COMBO_FMT", _scoring.Combo) : "";
 		if (_multLabel  != null) _multLabel.Text  = _scoring.Multiplier > 1 ? $"{_scoring.Multiplier}x" : "";
 
