@@ -47,7 +47,7 @@ public static class ChartLoader
 		result = TryLoadDotChart(basePath + ".chart", selectedDifficulty, iniDelayMs);
 		if (result != null) return result;
 
-		result = TryLoadJson(basePath + ".json");
+		result = TryLoadJson(basePath + ".json", iniDelayMs);
 		if (result != null) return result;
 
 		result = TryLoadMidi(dir + "notes.mid", selectedDifficulty, iniDelayMs);
@@ -114,7 +114,7 @@ public static class ChartLoader
 		};
 	}
 
-	private static ChartResult TryLoadJson(string jsonPath)
+	private static ChartResult TryLoadJson(string jsonPath, float iniDelayMs = 0f)
 	{
 		if (!FileAccess.FileExists(jsonPath))
 		{
@@ -136,7 +136,7 @@ public static class ChartLoader
 			var root = doc.RootElement;
 
 			float bpm         = 128f;
-			float startOffset = 0f;
+			float startOffset = iniDelayMs / 1000f;
 			string songName   = null;
 
 			if (root.TryGetProperty("bpm",         out var bv)) bpm         = bv.GetSingle();
