@@ -23,10 +23,6 @@ public class ScoreManager
 	/// </summary>
 	public (int score, string label, Color color) ProcessHit(Note note, string difficulty, float noteSpeed)
 	{
-		Combo++;
-		UpdateMultiplier();
-		if (Combo > GameData.MaxCombo) GameData.MaxCombo = Combo;
-
 		float dist = Mathf.Abs(note.GlobalPosition.Z - Note.HitLineZ);
 
 		float diffMult = difficulty switch
@@ -40,14 +36,27 @@ public class ScoreManager
 
 		float perfectThreshold = 0.025f * noteSpeed * diffMult;
 		float greatThreshold   = 0.06f  * noteSpeed * diffMult;
+		float goodThreshold    = 0.09f  * noteSpeed * diffMult;
+
+		// Hit fora da janela válida → tratar como miss
+		if (dist > goodThreshold)
+		{
+			ProcessMiss();
+			return (0, Locale.Tr("MISS"), Colors.Red);
+		}
+
+		// Hit válido — incrementa combo
+		Combo++;
+		UpdateMultiplier();
+		if (Combo > GameData.MaxCombo) GameData.MaxCombo = Combo;
 
 		int    baseScore;
 		string label;
 		Color  color;
 
-		if      (dist < perfectThreshold) { baseScore = 100; label = Locale.Tr("PERFECT"); color = Colors.Cyan;   }
-		else if (dist < greatThreshold)   { baseScore =  75; label = Locale.Tr("GREAT");   color = Colors.Yellow; }
-		else                               { baseScore =  50; label = Locale.Tr("GOOD");    color = Colors.White;  }
+		if      (dist <= perfectThreshold) { baseScore = 100; label = Locale.Tr("PERFECT"); color = Colors.Cyan;   }
+		else if (dist <= greatThreshold)   { baseScore =  75; label = Locale.Tr("GREAT");   color = Colors.Yellow; }
+		else                                { baseScore =  50; label = Locale.Tr("GOOD");    color = Colors.White;  }
 
 		int points = baseScore * Multiplier;
 		Score += points;
