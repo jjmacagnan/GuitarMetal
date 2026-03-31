@@ -95,6 +95,7 @@ public static class GameData
 		SelectedSongPath      = "";
 		SelectedSongName      = "";
 		LoadedStream          = null;
+		LoadedBPM             = 128f;
 		PreparedNotes         = null;
 		SelectedDifficulty    = null;
 		AvailableDifficulties = null;
