@@ -76,7 +76,7 @@ public partial class GameManager : Node3D
 
 		// BPM é resolvido ANTES de publicar NoteSpeed no GameData
 		if (GameData.LoadedBPM > 0) BPM = GameData.LoadedBPM;
-		GameData.NoteSpeed = NoteSpeed;
+		GameData.SetNoteSpeedForRun(NoteSpeed);
 
 		// 1. Usa notas pré-carregadas ou gera fallback
 		if (GameData.PreparedNotes != null && GameData.PreparedNotes.Count > 0)

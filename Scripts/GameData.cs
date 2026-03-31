@@ -12,10 +12,19 @@ public static class GameData
 	/// <summary>Distância de spawn (|Z|). Notas surgem em Z = -NoteSpawnDistance.</summary>
 	public const float NoteSpawnDistance   = 60f;
 	/// <summary>
-	/// Velocidade ativa das notas. GameManager define isso em _Ready para que
-	/// LoadingScreen e GameManager usem sempre o mesmo TravelTime.
+	/// Velocidade ativa das notas. Deve ser definida ANTES do LoadingScreen
+	/// para garantir que os cálculos de TravelTime sejam consistentes.
 	/// </summary>
-	public static float NoteSpeed          { get; set; } = DefaultNoteSpeed;
+	public static float NoteSpeed          { get; private set; } = DefaultNoteSpeed;
+
+	/// <summary>
+	/// Define a velocidade das notas para a partida atual.
+	/// Deve ser chamado antes de carregar a cena do jogo.
+	/// </summary>
+	public static void SetNoteSpeedForRun(float speed)
+	{
+		if (speed > 0) NoteSpeed = speed;
+	}
 	/// <summary>Tempo que uma nota leva do spawn até a hitline com a velocidade ativa.</summary>
 	public static float TravelTime         => NoteSpawnDistance / NoteSpeed;
 
