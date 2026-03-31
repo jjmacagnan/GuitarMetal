@@ -72,13 +72,13 @@ public partial class PauseController : Control
 
 	private void OnRestart()
 	{
-		GetTree().Paused = false;
+		TogglePause();
 		EmitSignal(SignalName.RestartRequested);
 	}
 
 	private void OnQuit()
 	{
-		GetTree().Paused = false;
+		TogglePause();
 		EmitSignal(SignalName.QuitRequested);
 	}
 
