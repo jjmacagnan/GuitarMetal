@@ -9,6 +9,7 @@ public class ScoreManager
 	public int Score          { get; private set; }
 	public int Combo          { get; private set; }
 	public int Multiplier     { get; private set; } = 1;
+	public int NotesHit       { get; private set; }
 	public int ResolvedNotes  { get; private set; }
 	public int TotalNotes     { get; }
 	public bool AllResolved   => ResolvedNotes >= TotalNotes;
@@ -60,6 +61,7 @@ public class ScoreManager
 
 		int points = baseScore * Multiplier;
 		Score += points;
+		NotesHit++;
 		GameData.NotesHit++;
 
 		// Hold notes: não conta como resolvida agora — será resolvida no HoldComplete ou miss

@@ -335,7 +335,7 @@ public partial class GameManager : Node3D
 		{
 			if (_scoring.ResolvedNotes > 0)
 			{
-				float acc = (float)GameData.NotesHit / _scoring.ResolvedNotes * 100f;
+				float acc = Mathf.Min((float)_scoring.NotesHit / _scoring.ResolvedNotes * 100f, 100f);
 				_accuracyLabel.Text = $"{acc:F1}%";
 				Color col = acc >= 95f ? Colors.Cyan
 						  : acc >= 85f ? Colors.LightGreen
