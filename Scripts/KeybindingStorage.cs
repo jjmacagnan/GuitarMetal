@@ -22,11 +22,13 @@ public static class KeybindingStorage
 	public static readonly bool[]      DefaultIsAxis  = { true,  false,                    false,                     true,  false        };
 	public static readonly JoyAxis[]   DefaultAxis    = { JoyAxis.TriggerLeft, JoyAxis.Invalid, JoyAxis.Invalid, JoyAxis.TriggerRight, JoyAxis.Invalid };
 	public static readonly JoyButton[] DefaultButtons = { JoyButton.Invalid, JoyButton.LeftShoulder, JoyButton.RightShoulder, JoyButton.Invalid, JoyButton.Y };
+	public static readonly float[]     DefaultAxisValues = { 1f, 1f, 1f, 1f, 1f };
 
 	// ── Estado em memória ─────────────────────────────────────────────────
-	private static Key[]?      _keys;
-	private static bool[]?     _isAxis;
-	private static JoyAxis[]?  _axes;
+	private static Key[]?       _keys;
+	private static bool[]?      _isAxis;
+	private static JoyAxis[]?   _axes;
+	private static float[]?     _axisValues;
 	private static JoyButton[]? _buttons;
 
 	// ── API pública ───────────────────────────────────────────────────────
@@ -42,12 +44,13 @@ public static class KeybindingStorage
 		_keys![lane] = key;
 	}
 
-	public static void SetAxis(int lane, JoyAxis axis)
+	public static void SetAxis(int lane, JoyAxis axis, float axisValue = 1f)
 	{
 		EnsureLoaded();
-		_isAxis![lane]   = true;
-		_axes![lane]     = axis;
-		_buttons![lane]  = (JoyButton)(-1);
+		_isAxis![lane]     = true;
+		_axes![lane]       = axis;
+		_axisValues![lane] = axisValue >= 0f ? 1f : -1f;
+		_buttons![lane]    = (JoyButton)(-1);
 	}
 
 	public static void SetButton(int lane, JoyButton button)
@@ -61,10 +64,11 @@ public static class KeybindingStorage
 	/// <summary>Reseta tudo para os valores padrão em memória (não salva no disco).</summary>
 	public static void ResetToDefaults()
 	{
-		_keys    = (Key[])DefaultKeys.Clone();
-		_isAxis  = (bool[])DefaultIsAxis.Clone();
-		_axes    = (JoyAxis[])DefaultAxis.Clone();
-		_buttons = (JoyButton[])DefaultButtons.Clone();
+		_keys       = (Key[])DefaultKeys.Clone();
+		_isAxis     = (bool[])DefaultIsAxis.Clone();
+		_axes       = (JoyAxis[])DefaultAxis.Clone();
+		_axisValues = (float[])DefaultAxisValues.Clone();
+		_buttons    = (JoyButton[])DefaultButtons.Clone();
 	}
 
 	/// <summary>Persiste os bindings atuais em user://keybindings.cfg.</summary>
@@ -78,7 +82,10 @@ public static class KeybindingStorage
 			cfg.SetValue("keyboard", $"lane_{i}", (int)_keys![i]);
 			cfg.SetValue("gamepad",  $"lane_{i}_is_axis", _isAxis![i]);
 			if (_isAxis![i])
-				cfg.SetValue("gamepad", $"lane_{i}_axis",   (int)_axes![i]);
+			{
+				cfg.SetValue("gamepad", $"lane_{i}_axis",       (int)_axes![i]);
+				cfg.SetValue("gamepad", $"lane_{i}_axis_value", _axisValues![i]);
+			}
 			else
 				cfg.SetValue("gamepad", $"lane_{i}_button", (int)_buttons![i]);
 		}
@@ -116,7 +123,7 @@ public static class KeybindingStorage
 				var evAxis = new InputEventJoypadMotion
 				{
 					Axis      = _axes![i],
-					AxisValue = 1f
+					AxisValue = _axisValues![i]
 				};
 				InputMap.ActionAddEvent(action, evAxis);
 			}
@@ -230,6 +237,8 @@ public static class KeybindingStorage
 				{
 					if (cfg.HasSectionKey("gamepad", $"lane_{i}_axis"))
 						_axes![i] = (JoyAxis)(int)cfg.GetValue("gamepad", $"lane_{i}_axis");
+					if (cfg.HasSectionKey("gamepad", $"lane_{i}_axis_value"))
+						_axisValues![i] = (float)cfg.GetValue("gamepad", $"lane_{i}_axis_value");
 				}
 				else
 				{

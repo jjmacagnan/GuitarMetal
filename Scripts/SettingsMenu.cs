@@ -94,7 +94,7 @@ public partial class SettingsMenu : Control
 			}
 			else if (@event is InputEventJoypadMotion evAxis && Mathf.Abs(evAxis.AxisValue) > 0.5f)
 			{
-				KeybindingStorage.SetAxis(_listeningLane, evAxis.Axis);
+				KeybindingStorage.SetAxis(_listeningLane, evAxis.Axis, evAxis.AxisValue);
 				CommitListening();
 				GetViewport().SetInputAsHandled();
 			}
