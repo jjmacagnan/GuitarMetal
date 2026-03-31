@@ -16,6 +16,8 @@ public class ScoreManager
 
 	public ScoreManager(int totalNotes)
 	{
+		if (totalNotes < 0)
+			throw new System.ArgumentOutOfRangeException(nameof(totalNotes), "totalNotes must be non-negative.");
 		TotalNotes = totalNotes;
 	}
 
