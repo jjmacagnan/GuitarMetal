@@ -84,7 +84,7 @@ public partial class Credits : Control
     }
 
     private void OnBackPressed() =>
-        GetTree().ChangeSceneToFile("res://Scenes/MainMenu.tscn");
+        GetTree().ChangeSceneToFile(ScenePaths.MainMenu);
 
     private void ApplyLocale()
     {

@@ -15,6 +15,8 @@ public partial class Leaderboard : Control
     private Button        _clearButton;
     private string        _currentSongName = "";
 
+	private void OnBackButtonPressed() => GetTree().ChangeSceneToFile(ScenePaths.MainMenu);
+
 	// Reutiliza o scanner de músicas do SongSelectMenu
 	private static readonly string[] LooseAudioExtensions = { ".ogg", ".mp3", ".wav" };
 	private static readonly string[] FolderAudioCandidates =
@@ -56,9 +58,8 @@ public partial class Leaderboard : Control
 		if (_backButton != null)
 		{
 			_backButton.Text = Locale.Tr("BACK");
-			// ensure back action is connected
-			_backButton.Pressed -= () => GetTree().ChangeSceneToFile("res://Scenes/MainMenu.tscn");
-			_backButton.Pressed += () => GetTree().ChangeSceneToFile("res://Scenes/MainMenu.tscn");
+			_backButton.Pressed -= OnBackButtonPressed;
+			_backButton.Pressed += OnBackButtonPressed;
 		}
 		if (_hintLabel != null) _hintLabel.Text = Locale.Tr("SELECT_SONG_LB");
 		if (_clearButton != null) _clearButton.Text = Locale.Tr("CLEAR_SCORES");
@@ -68,7 +69,7 @@ public partial class Leaderboard : Control
 	{
 		if (@event.IsActionPressed("ui_cancel"))
 		{
-			GetTree().ChangeSceneToFile("res://Scenes/MainMenu.tscn");
+			GetTree().ChangeSceneToFile(ScenePaths.MainMenu);
 			GetViewport().SetInputAsHandled();
 		}
 	}
