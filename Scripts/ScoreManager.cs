@@ -24,7 +24,7 @@ public class ScoreManager
 	/// <summary>
 	/// Processa um acerto de nota. Retorna (pontos ganhos, label de feedback, cor de feedback).
 	/// </summary>
-	public (int score, string label, Color color) ProcessHit(Note note, string difficulty, float noteSpeed)
+	public (int score, string label, Color color, bool wasHit) ProcessHit(Note note, string difficulty, float noteSpeed)
 	{
 		float dist = Mathf.Abs(note.GlobalPosition.Z - Note.HitLineZ);
 
@@ -45,7 +45,7 @@ public class ScoreManager
 		if (dist > goodThreshold)
 		{
 			ProcessMiss();
-			return (0, Locale.Tr("MISS"), Colors.Red);
+			return (0, Locale.Tr("MISS"), Colors.Red, false);
 		}
 
 		// Hit válido — incrementa combo
@@ -70,7 +70,7 @@ public class ScoreManager
 		if (!note.IsLong)
 			MarkResolved();
 
-		return (points, label, color);
+		return (points, label, color, true);
 	}
 
 	/// <summary>

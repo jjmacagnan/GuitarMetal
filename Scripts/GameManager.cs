@@ -244,11 +244,14 @@ public partial class GameManager : Node3D
 	{
 		if (_songEnded) return;
 
-		var (_, label, color) = _scoring.ProcessHit(note, GameData.SelectedDifficulty, NoteSpeed);
+		var (_, label, color, wasHit) = _scoring.ProcessHit(note, GameData.SelectedDifficulty, NoteSpeed);
 
 		ShowFeedback(label, color);
-		_particles.SpawnHitEffect(lane);
-		if (note.IsLong) _particles.StartHoldFire(lane);
+		if (wasHit)
+		{
+			_particles.SpawnHitEffect(lane);
+			if (note.IsLong) _particles.StartHoldFire(lane);
+		}
 		CheckSongEnd();
 	}
 
