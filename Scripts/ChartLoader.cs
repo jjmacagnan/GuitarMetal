@@ -200,13 +200,12 @@ public static class ChartLoader
 			GameData.SelectedSongName = imported.SongName;
 
 		var notes = new List<NoteData>();
-		float offsetDiff = iniDelayMs / 1000f;
 
 		foreach (var nd in imported.Notes)
 		{
 			notes.Add(new NoteData
 			{
-				Time     = nd.Time + offsetDiff,
+				Time     = nd.Time + imported.StartOffset + iniDelayMs / 1000f,
 				Lane     = nd.Lane,
 				IsLong   = nd.IsLong,
 				Duration = nd.Duration
