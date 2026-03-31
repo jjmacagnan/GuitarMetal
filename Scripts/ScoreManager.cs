@@ -68,7 +68,7 @@ public class ScoreManager
 
 		// Hold notes: não conta como resolvida agora — será resolvida no HoldComplete ou miss
 		if (!note.IsLong)
-			ResolvedNotes++;
+			MarkResolved();
 
 		return (points, label, color);
 	}
@@ -85,7 +85,7 @@ public class ScoreManager
 		int points = 150 * Multiplier;
 		Score += points;
 		GameData.HoldsComplete++;
-		ResolvedNotes++;
+		MarkResolved();
 
 		return points;
 	}
@@ -98,7 +98,7 @@ public class ScoreManager
 		Combo      = 0;
 		Multiplier = 1;
 		GameData.NotesMissed++;
-		ResolvedNotes++;
+		MarkResolved();
 	}
 
 	/// <summary>
@@ -114,6 +114,12 @@ public class ScoreManager
 			ResolvedNotes = TotalNotes;
 		}
 		return unresolved;
+	}
+
+	private void MarkResolved()
+	{
+		if (ResolvedNotes < TotalNotes)
+			ResolvedNotes++;
 	}
 
 	private void UpdateMultiplier()
