@@ -23,14 +23,22 @@ public partial class PauseController : Control
 	/// </summary>
 	public void Initialize(CanvasLayer hud, AudioStreamPlayer audio)
 	{
+		if (hud == null)
+		{
+			GD.PushError($"{nameof(PauseController)}.{nameof(Initialize)} called with null HUD.");
+			return;
+		}
+
+		if (GetParent() != null || _pauseOverlay != null)
+			return; // already initialized
+
 		_audio = audio;
 		ProcessMode = ProcessModeEnum.Always;
 
 		BuildPauseOverlay(hud);
 		BuildTouchPauseButton(hud);
 
-		if (hud != null)
-			hud.AddChild(this);
+		hud.AddChild(this);
 	}
 
 	/// <summary>Informa que a música acabou (desabilita toggle).</summary>
