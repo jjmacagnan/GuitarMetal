@@ -123,6 +123,11 @@ public static class ChartLoader
 		}
 
 		using var file = FileAccess.Open(jsonPath, FileAccess.ModeFlags.Read);
+		if (file == null)
+		{
+			GD.PushWarning($"[ChartLoader] Não foi possível abrir JSON: '{jsonPath}'");
+			return null;
+		}
 		string json = file.GetAsText();
 
 		try
