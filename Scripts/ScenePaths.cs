@@ -4,6 +4,8 @@
 /// </summary>
 public static class ScenePaths
 {
+	// IMPORTANT: This path is also hardcoded in `project.godot` as the main scene.
+	// If you change this constant, you MUST update `project.godot` as well.
 	public const string MainMenu         = "res://Scenes/MainMenu.tscn";
 	public const string SongSelect       = "res://Scenes/SongSelect.tscn";
 	public const string DifficultySelect = "res://Scenes/DifficultySelect.tscn";
