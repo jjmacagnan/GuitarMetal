@@ -42,7 +42,7 @@ public partial class SongSelectMenu : Control
         _titleLabel      = GetNodeOrNull<Label>("VBox/TitleLabel");
         _backButton      = GetNodeOrNull<Button>("VBox/BackButton");
 
-        _backButton?.Connect("pressed", Callable.From(() => GetTree().ChangeSceneToFile(ScenePaths.MainMenu)));
+        if (_backButton != null) _backButton.Pressed += () => GetTree().ChangeSceneToFile(ScenePaths.MainMenu);
 
         _previewPlayer = new AudioStreamPlayer { VolumeDb = -8f };
         AddChild(_previewPlayer);
