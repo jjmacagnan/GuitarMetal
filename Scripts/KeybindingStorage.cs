@@ -45,8 +45,9 @@ public static class KeybindingStorage
 	public static void SetAxis(int lane, JoyAxis axis)
 	{
 		EnsureLoaded();
-		_isAxis![lane] = true;
-		_axes![lane]   = axis;
+		_isAxis![lane]   = true;
+		_axes![lane]     = axis;
+		_buttons![lane]  = (JoyButton)(-1);
 	}
 
 	public static void SetButton(int lane, JoyButton button)
@@ -54,6 +55,7 @@ public static class KeybindingStorage
 		EnsureLoaded();
 		_isAxis![lane]  = false;
 		_buttons![lane] = button;
+		_axes![lane]    = (JoyAxis)(-1);
 	}
 
 	/// <summary>Reseta tudo para os valores padrão em memória (não salva no disco).</summary>
