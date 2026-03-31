@@ -27,9 +27,8 @@ public class SongTimeClock
 	/// </summary>
 	public double GetAudioStartDelay(float travelTime, float audioLatencyOffset)
 	{
-		double outputLatency = AudioServer.GetOutputLatency() + audioLatencyOffset;
 		const double AudioDelay = 0.3;
-		return travelTime + AudioDelay + outputLatency;
+		return travelTime + AudioDelay;
 	}
 
 	/// <summary>
