@@ -182,8 +182,12 @@ public partial class SongSelectMenu : Control
         }
         else
         {
-            if (difficulties.Count == 1) GameData.SelectedDifficulty = difficulties[0];
-            GetTree().ChangeSceneToFile(ScenePaths.Loading);
+            if (difficulties.Count == 1)
+            {
+                GameData.SelectedDifficulty = difficulties[0];
+                GetTree().ChangeSceneToFile(ScenePaths.Loading);
+            }
+            // If difficulties.Count is 0, stay on song select screen
         }
     }
 
