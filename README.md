@@ -3,7 +3,7 @@
 [![🇧🇷 Português](https://img.shields.io/badge/lang-Português-green?style=flat-square)](README.md)
 [![🇺🇸 English](https://img.shields.io/badge/lang-English-blue?style=flat-square)](README.en.md)
 
-Jogo de ritmo inspirado em Guitar Hero, construído do zero com Godot 4.6 e C#. Suporta charts no formato Clone Hero (`.chart`) e Rock Band (`.mid`), hold notes, seleção de dificuldade, controle gamepad e teclado simultâneos, leaderboard local e internacionalização PT/EN.
+Jogo de ritmo inspirado em Guitar Hero, construído do zero com Godot 4.6 e C#. Suporta charts no formato Clone Hero (`.chart`) e Rock Band (`.mid`), hold notes, seleção de dificuldade, controle gamepad e teclado simultâneos, leaderboard local e internacionalização PT/EN/ES.
 
 > Projeto desenvolvido para a disciplina de **Desenvolvimento de Jogos para Smartphones**, integrante da **Especialização em Programação para Dispositivos Móveis** oferecida pela **UTFPR — Universidade Tecnológica Federal do Paraná**.
 
@@ -23,13 +23,20 @@ Jogo de ritmo inspirado em Guitar Hero, construído do zero com Godot 4.6 e C#. 
 ```
 res://
 ├── Scripts/
-│   ├── GameManager.cs       ← Controlador principal (spawn, score, HUD, pause)
+│   ├── GameManager.cs       ← Controlador principal (spawn de notas, orquestração)
 │   ├── Lane.cs              ← Lógica de pista (input, visuals, hold tracking)
 │   ├── Note.cs              ← Física e visual da nota (tap e hold)
 │   ├── SongChart.cs         ← Estrutura de dados + geração procedural
+│   ├── ChartLoader.cs       ← Carregamento unificado de charts (.chart/.mid/.json)
 │   ├── ChartImporter.cs     ← Parser de arquivos .chart (Clone Hero)
 │   ├── MidiImporter.cs      ← Parser de arquivos .mid (Rock Band)
 │   ├── SongIniReader.cs     ← Leitor de song.ini (nome, artista, delay)
+│   ├── ScoreManager.cs      ← Pontuação, combo e multiplicador
+│   ├── SongTimeClock.cs     ← Clock de áudio com correção de drift
+│   ├── HitParticlePool.cs   ← Pool de partículas de hit por lane
+│   ├── PauseController.cs   ← Controle de pausa e overlay
+│   ├── LaneConfig.cs        ← Constantes de lanes (cores, posições, teclas)
+│   ├── ScenePaths.cs        ← Caminhos de cenas centralizados
 │   ├── GameData.cs          ← Dados estáticos entre cenas
 │   ├── LoadingScreen.cs     ← State machine de carregamento
 │   ├── SongSelectMenu.cs    ← Seleção de música (scan da pasta Audio/)
@@ -40,7 +47,7 @@ res://
 │   ├── Leaderboard.cs       ← Top 10 scores por música
 │   ├── ScoreStorage.cs      ← Persistência de scores (JSON)
 │   ├── KeybindingStorage.cs ← Persistência e aplicação de keybindings customizados
-│   ├── Locale.cs            ← Internacionalização PT/EN
+│   ├── Locale.cs            ← Internacionalização PT/EN/ES
 │   ├── SettingsMenu.cs      ← Tela de configurações (remapeamento de teclas)
 │   ├── Credits.cs           ← Tela de créditos e licença
 │   └── MobileUI.cs          ← Autoload: escala UI para Android e iOS
@@ -59,6 +66,7 @@ res://
 │   └── Note.tscn            ← Componente de nota (tap e hold)
 ├── Audio/               ← Coloque seus .ogg/.mp3 e .chart/.mid aqui (ignorados pelo git)
 ├── SFX/                 ← Efeitos sonoros do jogo
+├── Translations/        ← CSV de traduções e arquivos .translation compilados
 ├── LICENSE
 └── project.godot
 ```
@@ -152,7 +160,7 @@ As janelas de timing são ajustadas por dificuldade: Easy (1.5×), Medium (1.2×
 
 As notas são posicionadas diretamente pelo clock do áudio (`GameData.SongTime`), não por acúmulo de delta por frame. Isso garante sincronização perfeita independente de variações de frame rate.
 
-O campo `AudioLatencyOffset` (Export no GameManager) permite compensação manual de latência se necessário.
+O componente `SongTimeClock` gerencia a compensação de latência de áudio e correção de drift automaticamente.
 
 ---
 
@@ -222,7 +230,7 @@ Os scores são salvos localmente em `user://scores.json` (pasta de dados do Godo
 
 ## Idiomas
 
-O jogo suporta **Português (BR)** e **Inglês**. O idioma pode ser alterado pelo botão de idioma no menu principal. A preferência é aplicada em tempo real, sem necessidade de reiniciar.
+O jogo suporta **Português (BR)**, **Inglês** e **Espanhol**. O idioma pode ser alterado pelo botão de idioma no menu principal. A preferência é aplicada em tempo real, sem necessidade de reiniciar.
 
 ---
 
