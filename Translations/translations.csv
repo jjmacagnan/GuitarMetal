@@ -74,6 +74,7 @@ LANE_BLUE,Azul,Blue,Azul
 LANE_ORANGE,Laranja,Orange,Naranja
 PRESS_KEY,"[ Pressione uma tecla ]","[ Press a key ]","[ Presione una tecla ]"
 PRESS_BUTTON,"[ Pressione um botão ]","[ Press a button ]","[ Presione un botón ]"
+PRESS_INPUT,"[ Pressione botão ou gatilho ]","[ Press button or trigger ]","[ Presione botón o gatillo ]"
 RESET_DEFAULTS,Restaurar Padrões,Reset to Defaults,Restaurar Valores
 SETTINGS_SAVED,Salvo!,Saved!,¡Guardado!
 CREDITS,Créditos,Credits,Créditos

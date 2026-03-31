@@ -180,7 +180,7 @@ public partial class SettingsMenu : Control
 		_listeningKeyboard = isKeyboard;
 
 		Button btn = isKeyboard ? _keyboardButtons[lane] : _gamepadButtons[lane];
-		btn.Text = Locale.Tr(isKeyboard ? "PRESS_KEY" : "PRESS_BUTTON");
+		btn.Text = Locale.Tr(isKeyboard ? "PRESS_KEY" : "PRESS_INPUT");
 		btn.AddThemeColorOverride("font_color", new Color(1f, 0.85f, 0f)); // amarelo
 	}
 
