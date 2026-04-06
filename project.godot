@@ -51,6 +51,13 @@ ui_cancel={
 ]
 }
 
+[internationalization]
+
+locale/translations=PackedStringArray("res://Translations/translations.pt.translation", "res://Translations/translations.en.translation", "res://Translations/translations.es.translation")
+locale/fallback="pt"
+locale/locale_filter_mode=1
+locale/locale_filter=PackedStringArray("en", "es", "pt")
+
 [rendering]
 
 renderer/rendering_method="gl_compatibility"

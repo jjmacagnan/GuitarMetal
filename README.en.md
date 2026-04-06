@@ -3,7 +3,7 @@
 [![🇧🇷 Português](https://img.shields.io/badge/lang-Português-green?style=flat-square)](README.md)
 [![🇺🇸 English](https://img.shields.io/badge/lang-English-blue?style=flat-square)](README.en.md)
 
-A rhythm game inspired by Guitar Hero, built from scratch with Godot 4.6 and C#. Supports Clone Hero (`.chart`) and Rock Band (`.mid`) chart formats, hold notes, difficulty selection, simultaneous gamepad and keyboard input, local leaderboard, and PT/EN internationalization.
+A rhythm game inspired by Guitar Hero, built from scratch with Godot 4.6 and C#. Supports Clone Hero (`.chart`) and Rock Band (`.mid`) chart formats, hold notes, difficulty selection, simultaneous gamepad and keyboard input, local leaderboard, and PT/EN/ES internationalization.
 
 > Project developed for the **Mobile Game Development** course, part of the **Mobile Devices Programming Specialization** offered by **UTFPR — Federal University of Technology of Paraná, Brazil**.
 
@@ -23,13 +23,20 @@ A rhythm game inspired by Guitar Hero, built from scratch with Godot 4.6 and C#.
 ```
 res://
 ├── Scripts/
-│   ├── GameManager.cs       ← Main controller (spawn, score, HUD, pause)
+│   ├── GameManager.cs       ← Main controller (note spawning, component orchestration)
 │   ├── Lane.cs              ← Lane logic (input, visuals, hold tracking)
 │   ├── Note.cs              ← Note physics and visuals (tap and hold)
 │   ├── SongChart.cs         ← Data structure + procedural generation
+│   ├── ChartLoader.cs       ← Unified chart loading (.chart/.mid/.json)
 │   ├── ChartImporter.cs     ← .chart file parser (Clone Hero)
 │   ├── MidiImporter.cs      ← .mid file parser (Rock Band)
 │   ├── SongIniReader.cs     ← song.ini reader (name, artist, delay)
+│   ├── ScoreManager.cs      ← Scoring, combo, and multiplier
+│   ├── SongTimeClock.cs     ← Audio clock with drift correction
+│   ├── HitParticlePool.cs   ← Hit particle pool per lane
+│   ├── PauseController.cs   ← Pause control and overlay
+│   ├── LaneConfig.cs        ← Lane constants (colors, positions, keys)
+│   ├── ScenePaths.cs        ← Centralized scene paths
 │   ├── GameData.cs          ← Static data shared between scenes
 │   ├── LoadingScreen.cs     ← Loading state machine
 │   ├── SongSelectMenu.cs    ← Song selection (Audio/ folder scan)
@@ -40,7 +47,7 @@ res://
 │   ├── Leaderboard.cs       ← Top 10 scores per song
 │   ├── ScoreStorage.cs      ← Score persistence (JSON)
 │   ├── KeybindingStorage.cs ← Custom keybinding persistence and application
-│   ├── Locale.cs            ← PT/EN internationalization
+│   ├── Locale.cs            ← PT/EN/ES internationalization
 │   ├── SettingsMenu.cs      ← Settings screen (key remapping)
 │   ├── Credits.cs           ← Credits and license screen
 │   └── MobileUI.cs          ← Autoload: scales UI for Android and iOS
@@ -59,6 +66,7 @@ res://
 │   └── Note.tscn            ← Note component (tap and hold)
 ├── Audio/               ← Place your .ogg/.mp3 and .chart/.mid files here (git-ignored)
 ├── SFX/                 ← Game sound effects
+├── Translations/        ← Translation CSV and compiled .translation files
 ├── LICENSE
 └── project.godot
 ```
@@ -152,7 +160,7 @@ Timing windows are adjusted per difficulty: Easy (1.5×), Medium (1.2×), Hard (
 
 Notes are positioned directly by the audio clock (`GameData.SongTime`), not by frame-delta accumulation. This ensures perfect synchronization regardless of frame rate variations.
 
-The `AudioLatencyOffset` field (Export on GameManager) allows manual latency compensation if needed.
+The `SongTimeClock` component manages audio latency compensation and drift correction automatically.
 
 ---
 
@@ -222,7 +230,7 @@ Scores are saved locally in `user://scores.json` (Godot's data folder on the ope
 
 ## Languages
 
-The game supports **Portuguese (BR)** and **English**. The language can be changed via the language button on the main menu. The preference is applied in real time, with no restart required.
+The game supports **Portuguese (BR)**, **English**, and **Spanish**. The language can be changed via the language button on the main menu. The preference is applied in real time, with no restart required.
 
 ---
 

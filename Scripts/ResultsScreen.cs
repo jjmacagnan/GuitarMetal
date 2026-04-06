@@ -41,21 +41,21 @@ public partial class ResultsScreen : Control
         if (playAgain != null)
         {
             playAgain.Text = Locale.Tr("PLAY_AGAIN");
-            playAgain.Pressed += () => GetTree().ChangeSceneToFile("res://Scenes/SongSelect.tscn");
+            playAgain.Pressed += () => GetTree().ChangeSceneToFile(ScenePaths.SongSelect);
         }
         else GD.PushError("[ResultsScreen] PlayAgainButton não encontrado!");
 
         if (leaderboard != null)
         {
             leaderboard.Text = Locale.Tr("VIEW_LEADERBOARD");
-            leaderboard.Pressed += () => GetTree().ChangeSceneToFile("res://Scenes/Leaderboard.tscn");
+            leaderboard.Pressed += () => GetTree().ChangeSceneToFile(ScenePaths.Leaderboard);
         }
         else GD.PushError("[ResultsScreen] LeaderboardButton não encontrado!");
 
         if (menu != null)
         {
             menu.Text = Locale.Tr("MAIN_MENU");
-            menu.Pressed += () => GetTree().ChangeSceneToFile("res://Scenes/MainMenu.tscn");
+            menu.Pressed += () => GetTree().ChangeSceneToFile(ScenePaths.MainMenu);
         }
         else GD.PushError("[ResultsScreen] MenuButton não encontrado!");
 
@@ -71,7 +71,7 @@ public partial class ResultsScreen : Control
         // B (ui_cancel) → volta ao menu principal
         if (@event.IsActionPressed("ui_cancel"))
         {
-            GetTree().ChangeSceneToFile("res://Scenes/MainMenu.tscn");
+            GetTree().ChangeSceneToFile(ScenePaths.MainMenu);
             GetViewport().SetInputAsHandled();
         }
     }
