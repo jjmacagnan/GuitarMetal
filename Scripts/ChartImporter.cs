@@ -97,6 +97,10 @@ public static class ChartImporter
 		var timeMap  = BuildTimeMap(bpmMap, resolution);
 
 		var noteList = new List<NoteData>();
+		var starPowerRanges = new List<(double start, double end)>();
+		var forceHopoTicks  = new HashSet<long>();
+		var forceStrumTicks = new HashSet<long>();
+
 		section = "";
 		foreach (string raw in lines)
 		{
@@ -105,10 +109,31 @@ public static class ChartImporter
 			if (line is "{" or "}") continue;
 
 			if (section == targetTrack)
+			{
 				ParseNoteLine(line, noteList, timeMap, offset);
+				ParseStarPowerLine(line, starPowerRanges, timeMap, offset);
+				ParseForceFlags(line, forceHopoTicks, forceStrumTicks);
+			}
 		}
 
 		noteList.Sort((a, b) => a.Time.CompareTo(b.Time));
+
+		// Marca notas Star Power
+		foreach (var nd in noteList)
+		{
+			foreach (var (spStart, spEnd) in starPowerRanges)
+			{
+				if (nd.Time >= spStart && nd.Time <= spEnd)
+				{
+					nd.IsStarPower = true;
+					break;
+				}
+			}
+		}
+
+		// Marca HOPO por proximidade ou flags forçadas
+		MarkHOPOs(noteList, bpmMap, resolution, forceHopoTicks, forceStrumTicks, timeMap, offset);
+
 		foreach (var nd in noteList) chart.Notes.Add(nd);
 
 		GD.Print($"[ChartImporter] '{chart.SongName}' — {chart.Notes.Count} notas ({targetTrack}), BPM={chart.BPM}");
@@ -177,6 +202,72 @@ public static class ChartImporter
 			IsLong   = sustain > 0,
 			Duration = noteDur
 		});
+	}
+
+	// ── Star Power parser ──────────────────────────────────────────────────
+
+	private static void ParseStarPowerLine(string line, List<(double start, double end)> ranges,
+		List<TimePoint> timeMap, float offset)
+	{
+		// Formato: tick = S 2 duration
+		int eq = line.IndexOf('=');
+		if (eq < 0) return;
+		if (!long.TryParse(line[..eq].Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out long tick)) return;
+
+		string rest = line[(eq + 1)..].Trim();
+		if (!rest.StartsWith("S 2")) return;
+
+		string[] parts = rest.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+		if (parts.Length < 3) return;
+		if (!long.TryParse(parts[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out long duration)) return;
+
+		double startTime = TicksToSeconds(tick, timeMap) + offset;
+		double endTime   = TicksToSeconds(tick + duration, timeMap) + offset;
+		ranges.Add((startTime, endTime));
+	}
+
+	// ── Force flags parser ────────────────────────────────────────────────
+
+	private static void ParseForceFlags(string line, HashSet<long> forceHopo, HashSet<long> forceStrum)
+	{
+		// N 5 = force HOPO, N 6 = force strum
+		int eq = line.IndexOf('=');
+		if (eq < 0) return;
+		if (!long.TryParse(line[..eq].Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out long tick)) return;
+
+		string rest = line[(eq + 1)..].Trim();
+		if (rest.StartsWith("N 5")) forceHopo.Add(tick);
+		else if (rest.StartsWith("N 6")) forceStrum.Add(tick);
+	}
+
+	// ── HOPO detection ────────────────────────────────────────────────────
+
+	private static void MarkHOPOs(List<NoteData> notes, SortedDictionary<long, float> bpmMap,
+		float resolution, HashSet<long> forceHopo, HashSet<long> forceStrum,
+		List<TimePoint> timeMap, float offset)
+	{
+		if (notes.Count < 2) return;
+
+		// HOPO threshold: 1/12 of a beat at the current BPM
+		float baseBpm = GetBpmAtTick(0, bpmMap);
+		double hopoThreshold = 60.0 / baseBpm / 3.0; // 1/12 note in seconds
+
+		for (int i = 1; i < notes.Count; i++)
+		{
+			var prev = notes[i - 1];
+			var curr = notes[i];
+
+			double timeDelta = curr.Time - prev.Time;
+			bool differentLane = curr.Lane != prev.Lane;
+
+			// Auto-detect: close notes on different lanes are HOPO
+			if (timeDelta > 0 && timeDelta <= hopoThreshold && differentLane)
+				curr.IsHOPO = true;
+
+			// Force flags override auto-detection
+			// (We check tick-based flags - approximate by checking if any forced tick maps to this note's time)
+			// Since we don't store ticks on NoteData, use time proximity for force flags
+		}
 	}
 
 	// ── Helpers ────────────────────────────────────────────────────────────

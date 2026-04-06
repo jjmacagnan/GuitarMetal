@@ -31,6 +31,13 @@ public class SongTimeClock
 		return travelTime + AudioDelay;
 	}
 
+	/// <summary>Reposiciona o clock para um tempo específico (usado no loop de prática).</summary>
+	public void SeekTo(double time)
+	{
+		SongTime = time;
+		_lastRawAudioTime = -1.0;
+	}
+
 	/// <summary>
 	/// Atualiza o tempo a cada frame com correção de drift do áudio.
 	/// </summary>

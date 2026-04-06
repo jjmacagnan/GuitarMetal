@@ -19,6 +19,7 @@ public partial class SongSelectMenu : Control
     private ScrollContainer _scrollContainer;
     private Label           _previewLabel;
     private CheckBox        _missSfxCheck;
+    private CheckBox        _practiceCheck;
     private Label           _titleLabel;
     private Button          _backButton;
     private AudioStreamPlayer _previewPlayer;
@@ -53,6 +54,21 @@ public partial class SongSelectMenu : Control
             _missSfxCheck.ButtonPressed = GameData.MissSfxEnabled;
             _missSfxCheck.Toggled += (on) => GameData.MissSfxEnabled = on;
         }
+
+        // Practice mode checkbox (criado programaticamente)
+        _practiceCheck = new CheckBox
+        {
+            Text = Locale.Tr("PRACTICE_MODE"),
+            ButtonPressed = GameData.IsPracticeMode,
+            FocusMode = FocusModeEnum.All,
+        };
+        _practiceCheck.AddThemeFontSizeOverride("font_size", 18);
+        _practiceCheck.Toggled += (on) => GameData.IsPracticeMode = on;
+        var vbox = GetNodeOrNull<VBoxContainer>("VBox");
+        if (vbox != null && _missSfxCheck != null)
+            vbox.AddChild(_practiceCheck);
+        else
+            vbox?.AddChild(_practiceCheck);
 
         ApplyLocale();
         PopulateSongs();

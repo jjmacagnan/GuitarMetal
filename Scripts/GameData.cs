@@ -49,6 +49,10 @@ public static class GameData
 	/// <summary>Se true, toca SFX ao pressionar tecla sem nota na janela de acerto.</summary>
 	public static bool MissSfxEnabled { get; set; } = true;
 
+	// ── Practice Mode ───────────────────────────────────────────────────
+	/// <summary>Se true, a partida roda em modo prática (no-fail, speed control, timing feedback).</summary>
+	public static bool IsPracticeMode { get; set; } = false;
+
 	// ── Dificuldade ──────────────────────────────────────────────────────
 	/// <summary>Track selecionada (ex: "ExpertSingle"). null = auto (maior disponível).</summary>
 	public static string       SelectedDifficulty    { get; set; } = null;
@@ -99,5 +103,6 @@ public static class GameData
 		PreparedNotes         = null;
 		SelectedDifficulty    = null;
 		AvailableDifficulties = null;
+		IsPracticeMode        = false;
 	}
 }

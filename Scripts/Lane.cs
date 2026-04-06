@@ -443,6 +443,46 @@ public partial class Lane : Node3D
 		GD.Print($"[Lane{LaneIndex}] TouchZone: {_touchLeftBound:F0}–{_touchRightBound:F0}px (tela {viewSize.X:F0}px)");
 	}
 
+	/// <summary>Retorna a primeira nota HOPO na janela de acerto, ou null.</summary>
+	public Note GetFirstHOPOInWindow()
+	{
+		Note closest = null;
+		float closestDist = float.MaxValue;
+		for (int i = _activeNotes.Count - 1; i >= 0; i--)
+		{
+			var n = _activeNotes[i];
+			if (!IsInstanceValid(n) || n.WasHit || n.Missed || !n.IsHOPO || !n.IsInHitWindow()) continue;
+			float d = Mathf.Abs(n.GlobalPosition.Z - Note.HitLineZ);
+			if (d < closestDist) { closestDist = d; closest = n; }
+		}
+		return closest;
+	}
+
+	/// <summary>Ativa/desativa o glow de Star Power na track e botões.</summary>
+	public void SetStarPowerGlow(bool active)
+	{
+		if (active)
+		{
+			Color spColor = new Color(0.4f, 0.7f, 1f);
+			if (_trackMat != null)
+			{
+				_trackMat.EmissionEnabled = true;
+				_trackMat.Emission = spColor * 0.5f;
+				_trackMat.EmissionEnergyMultiplier = 2.0f;
+			}
+			if (_hitZoneMat != null)
+			{
+				_hitZoneMat.Emission = spColor * 3f;
+				_hitZoneMat.EmissionEnergyMultiplier = 5.0f;
+			}
+		}
+		else
+		{
+			// Restaura cores normais
+			ApplyColor();
+		}
+	}
+
 	private void ShowReleasePenalty()
 	{
 		if (_hitZoneMat == null) return;

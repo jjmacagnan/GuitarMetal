@@ -58,19 +58,19 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 30
 text = "JOGAR"
 
-[node name="LeaderboardButton" type="Button" parent="VBox"]
+[node name="LeaderboardButton" type="Button" parent="VBox" unique_id=853174142]
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 theme_override_font_sizes/font_size = 22
 text = "RANKING"
 
-[node name="CreditsButton" type="Button" parent="VBox"]
+[node name="CreditsButton" type="Button" parent="VBox" unique_id=760036704]
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "Créditos"
 
-[node name="SettingsButton" type="Button" parent="VBox"]
+[node name="SettingsButton" type="Button" parent="VBox" unique_id=978881174]
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
@@ -82,7 +82,7 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 22
 text = "Sair"
 
-[node name="LanguageButton" type="Button" parent="VBox"]
+[node name="LanguageButton" type="Button" parent="VBox" unique_id=820464496]
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
