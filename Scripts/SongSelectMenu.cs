@@ -65,10 +65,7 @@ public partial class SongSelectMenu : Control
         _practiceCheck.AddThemeFontSizeOverride("font_size", 18);
         _practiceCheck.Toggled += (on) => GameData.IsPracticeMode = on;
         var vbox = GetNodeOrNull<VBoxContainer>("VBox");
-        if (vbox != null && _missSfxCheck != null)
-            vbox.AddChild(_practiceCheck);
-        else
-            vbox?.AddChild(_practiceCheck);
+        vbox?.AddChild(_practiceCheck);
 
         ApplyLocale();
         PopulateSongs();
@@ -152,14 +149,24 @@ public partial class SongSelectMenu : Control
         if (_songButtons.Count > 0)
         {
             var lastBtn = _songButtons[^1];
+            Control prev = lastBtn;
+
             if (_missSfxCheck != null)
             {
-                lastBtn.FocusNeighborBottom      = _missSfxCheck.GetPath();
-                _missSfxCheck.FocusNeighborTop    = lastBtn.GetPath();
+                prev.FocusNeighborBottom       = _missSfxCheck.GetPath();
+                _missSfxCheck.FocusNeighborTop = prev.GetPath();
+                prev = _missSfxCheck;
             }
-            else if (_backButton != null)
+            if (_practiceCheck != null)
             {
-                lastBtn.FocusNeighborBottom = _backButton.GetPath();
+                prev.FocusNeighborBottom         = _practiceCheck.GetPath();
+                _practiceCheck.FocusNeighborTop  = prev.GetPath();
+                prev = _practiceCheck;
+            }
+            if (_backButton != null)
+            {
+                prev.FocusNeighborBottom       = _backButton.GetPath();
+                _backButton.FocusNeighborTop   = prev.GetPath();
             }
         }
     }

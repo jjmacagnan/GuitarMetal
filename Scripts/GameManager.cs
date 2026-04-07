@@ -307,7 +307,7 @@ public partial class GameManager : Node3D
 		if (_starPower != null)
 		{
 			bool wasActive = _starPower.IsActive;
-			_starPower.Update((float)delta);
+			_starPower.Update((float)delta * speed);
 			_scoring.BonusMultiplier = _starPower.GetBonusMultiplier();
 			if (wasActive && !_starPower.IsActive)
 				UpdateStarPowerGlow(false);
@@ -457,6 +457,10 @@ public partial class GameManager : Node3D
 
 		_clock.SeekTo(loopStart);
 		GameData.SongTime = _clock.SongTime;
+
+		// Reseta estado de HOPO chain para evitar hits fantasma do loop anterior
+		_lastHitLane = -1;
+		_lastHitTime = -1;
 	}
 
 	private void UpdatePracticeLabel()
@@ -643,6 +647,7 @@ public partial class GameManager : Node3D
 	// ── Fim de jogo ────────────────────────────────────────────────────────
 	private void CheckSongEnd()
 	{
+		if (_practice != null && _practice.IsLooping) return;
 		if (_scoring.AllResolved)
 			CallDeferred(nameof(EndSong));
 	}

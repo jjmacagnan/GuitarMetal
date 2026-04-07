@@ -479,6 +479,7 @@ public static class MidiImporter
                     Lane     = lane,
                     IsLong   = isLong,
                     Duration = isLong ? duration : 0f,
+                    Tick     = onTick,
                 });
             }
         }
@@ -510,17 +511,14 @@ public static class MidiImporter
             }
         }
 
-        // Mark HOPO by proximity
+        // Mark HOPO by tick proximity (tempo-independent)
         result.Sort((a, b) => a.Time.CompareTo(b.Time));
-        int initialTempo = 500000;
-        if (tempoMapRaw.Count > 0) { var e = tempoMapRaw.GetEnumerator(); e.MoveNext(); initialTempo = e.Current.Value; }
-        float bpm = 60_000_000f / initialTempo;
-        double hopoThreshold = 60.0 / bpm / 3.0;
+        long hopoTickThreshold = (long)Math.Round(division / 3.0);
 
         for (int i = 1; i < result.Count; i++)
         {
-            double delta = result[i].Time - result[i - 1].Time;
-            if (delta > 0 && delta <= hopoThreshold && result[i].Lane != result[i - 1].Lane)
+            long tickDelta = result[i].Tick - result[i - 1].Tick;
+            if (tickDelta > 0 && tickDelta <= hopoTickThreshold && result[i].Lane != result[i - 1].Lane)
                 result[i].IsHOPO = true;
         }
 
