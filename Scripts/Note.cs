@@ -6,11 +6,13 @@ using Godot;
 /// </summary>
 public partial class Note : Node3D
 {
-    [Export] public int    Lane     { get; set; } = 0;
-    [Export] public float  Speed    { get; set; } = 12f;
-    [Export] public double BeatTime { get; set; } = 0;
-    [Export] public bool   IsLong   { get; set; } = false;
-    [Export] public float  Duration { get; set; } = 0f;
+    [Export] public int    Lane       { get; set; } = 0;
+    [Export] public float  Speed      { get; set; } = 12f;
+    [Export] public double BeatTime   { get; set; } = 0;
+    [Export] public bool   IsLong     { get; set; } = false;
+    [Export] public float  Duration   { get; set; } = 0f;
+    [Export] public bool   IsStarPower { get; set; } = false;
+    [Export] public bool   IsHOPO     { get; set; } = false;
 
     public bool WasHit { get; private set; }
     public bool Missed { get; private set; }
@@ -45,16 +47,40 @@ public partial class Note : Node3D
     public void SetupVisuals(Color color)
     {
         _originalZ = Position.Z;
-        
+
+        // HOPO: cabeça esférica semi-transparente; SP: aura azul/branca brilhante
+        Mesh headShape;
+        Color headColor = color;
+        float emissionMult = 1.5f;
+        float alpha = 1f;
+
+        if (IsHOPO)
+        {
+            headShape = new SphereMesh { Radius = 0.7f, Height = 1.4f, RadialSegments = 16, Rings = 8 };
+            alpha = 0.85f;
+            emissionMult = 2.5f;
+        }
+        else
+        {
+            headShape = new BoxMesh { Size = new Vector3(1.4f, 0.3f, 1.4f) };
+        }
+
+        if (IsStarPower)
+        {
+            headColor = new Color(0.6f, 0.85f, 1f); // azul claro brilhante
+            emissionMult = 3.5f;
+        }
+
         // Cabeça (sempre presente)
         _headMesh = new MeshInstance3D { Name = "HeadMesh" };
-        _headMesh.Mesh = new BoxMesh { Size = new Vector3(1.4f, 0.3f, 1.4f) };
+        _headMesh.Mesh = headShape;
         _headMesh.MaterialOverride = new StandardMaterial3D
         {
-            AlbedoColor              = color,
+            AlbedoColor              = new Color(headColor.R, headColor.G, headColor.B, alpha),
             EmissionEnabled          = true,
-            Emission                 = color * 1.5f,
-            EmissionEnergyMultiplier = 1.5f
+            Emission                 = (IsStarPower ? headColor : color) * 1.5f,
+            EmissionEnergyMultiplier = emissionMult,
+            Transparency             = alpha < 1f ? BaseMaterial3D.TransparencyEnum.Alpha : BaseMaterial3D.TransparencyEnum.Disabled,
         };
         AddChild(_headMesh);
 

@@ -420,8 +420,18 @@ public static class MidiImporter
         // Chave: note number → lista de (tick, isOn)
         var events = new Dictionary<int, List<(long tick, bool isOn)>>();
 
+        // Star Power: MIDI note 116
+        var spEvents = new List<(long tick, bool isOn)>();
+
         ParseTrackNotes(guitarTrack, (note, vel, tick) =>
         {
+            // Star Power note
+            if (note == 116)
+            {
+                spEvents.Add((tick, vel > 0));
+                return;
+            }
+
             if (note < baseNote || note > baseNote + 4) return;
 
             if (!events.ContainsKey(note))
@@ -469,8 +479,47 @@ public static class MidiImporter
                     Lane     = lane,
                     IsLong   = isLong,
                     Duration = isLong ? duration : 0f,
+                    Tick     = onTick,
                 });
             }
+        }
+
+        // Star Power ranges
+        var spRanges = new List<(double start, double end)>();
+        for (int i = 0; i < spEvents.Count; i++)
+        {
+            if (!spEvents[i].isOn) continue;
+            long onTick = spEvents[i].tick;
+            long offTick = onTick;
+            for (int j = i + 1; j < spEvents.Count; j++)
+            {
+                if (!spEvents[j].isOn) { offTick = spEvents[j].tick; break; }
+            }
+            spRanges.Add((TicksToSeconds(onTick, timeMap), TicksToSeconds(offTick, timeMap)));
+        }
+
+        // Mark Star Power notes
+        foreach (var nd in result)
+        {
+            foreach (var (spStart, spEnd) in spRanges)
+            {
+                if (nd.Time >= spStart && nd.Time <= spEnd)
+                {
+                    nd.IsStarPower = true;
+                    break;
+                }
+            }
+        }
+
+        // Mark HOPO by tick proximity (tempo-independent)
+        result.Sort((a, b) => a.Time.CompareTo(b.Time));
+        long hopoTickThreshold = (long)Math.Round(division / 3.0);
+
+        for (int i = 1; i < result.Count; i++)
+        {
+            long tickDelta = result[i].Tick - result[i - 1].Tick;
+            if (tickDelta > 0 && tickDelta <= hopoTickThreshold && result[i].Lane != result[i - 1].Lane)
+                result[i].IsHOPO = true;
         }
 
         return result;

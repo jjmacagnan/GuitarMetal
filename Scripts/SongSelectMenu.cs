@@ -19,6 +19,7 @@ public partial class SongSelectMenu : Control
     private ScrollContainer _scrollContainer;
     private Label           _previewLabel;
     private CheckBox        _missSfxCheck;
+    private CheckBox        _practiceCheck;
     private Label           _titleLabel;
     private Button          _backButton;
     private AudioStreamPlayer _previewPlayer;
@@ -53,6 +54,18 @@ public partial class SongSelectMenu : Control
             _missSfxCheck.ButtonPressed = GameData.MissSfxEnabled;
             _missSfxCheck.Toggled += (on) => GameData.MissSfxEnabled = on;
         }
+
+        // Practice mode checkbox (criado programaticamente)
+        _practiceCheck = new CheckBox
+        {
+            Text = Locale.Tr("PRACTICE_MODE"),
+            ButtonPressed = GameData.IsPracticeMode,
+            FocusMode = FocusModeEnum.All,
+        };
+        _practiceCheck.AddThemeFontSizeOverride("font_size", 18);
+        _practiceCheck.Toggled += (on) => GameData.IsPracticeMode = on;
+        var vbox = GetNodeOrNull<VBoxContainer>("VBox");
+        vbox?.AddChild(_practiceCheck);
 
         ApplyLocale();
         PopulateSongs();
@@ -136,14 +149,24 @@ public partial class SongSelectMenu : Control
         if (_songButtons.Count > 0)
         {
             var lastBtn = _songButtons[^1];
+            Control prev = lastBtn;
+
             if (_missSfxCheck != null)
             {
-                lastBtn.FocusNeighborBottom      = _missSfxCheck.GetPath();
-                _missSfxCheck.FocusNeighborTop    = lastBtn.GetPath();
+                prev.FocusNeighborBottom       = _missSfxCheck.GetPath();
+                _missSfxCheck.FocusNeighborTop = prev.GetPath();
+                prev = _missSfxCheck;
             }
-            else if (_backButton != null)
+            if (_practiceCheck != null)
             {
-                lastBtn.FocusNeighborBottom = _backButton.GetPath();
+                prev.FocusNeighborBottom         = _practiceCheck.GetPath();
+                _practiceCheck.FocusNeighborTop  = prev.GetPath();
+                prev = _practiceCheck;
+            }
+            if (_backButton != null)
+            {
+                prev.FocusNeighborBottom       = _backButton.GetPath();
+                _backButton.FocusNeighborTop   = prev.GetPath();
             }
         }
     }

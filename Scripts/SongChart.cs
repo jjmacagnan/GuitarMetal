@@ -68,8 +68,13 @@ public partial class SongChart : Resource
 [GlobalClass]
 public partial class NoteData : Resource
 {
-	[Export] public double Time     { get; set; } = 0;
-	[Export] public int    Lane     { get; set; } = 0;
-	[Export] public bool   IsLong   { get; set; } = false;
-	[Export] public float  Duration { get; set; } = 0f;
+	[Export] public double Time       { get; set; } = 0;
+	[Export] public int    Lane       { get; set; } = 0;
+	[Export] public bool   IsLong     { get; set; } = false;
+	[Export] public float  Duration   { get; set; } = 0f;
+	[Export] public bool   IsStarPower { get; set; } = false;
+	[Export] public bool   IsHOPO     { get; set; } = false;
+
+	/// <summary>Tick original do chart (usado internamente para HOPO detection). Não exportado.</summary>
+	public long Tick { get; set; }
 }

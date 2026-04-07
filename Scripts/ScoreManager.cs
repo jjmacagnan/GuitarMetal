@@ -14,6 +14,12 @@ public class ScoreManager
 	public int TotalNotes     { get; }
 	public bool AllResolved   => ResolvedNotes >= TotalNotes;
 
+	/// <summary>Quando true, miss não reseta combo (modo prática).</summary>
+	public bool NoFail { get; set; }
+
+	/// <summary>Multiplicador de bônus externo (Star Power). Aplicado em cima do combo multiplier.</summary>
+	public int BonusMultiplier { get; set; } = 1;
+
 	public ScoreManager(int totalNotes)
 	{
 		if (totalNotes < 0)
@@ -61,7 +67,7 @@ public class ScoreManager
 		else if (dist <= greatThreshold)   { baseScore =  75; label = Locale.Tr("GREAT");   color = Colors.Yellow; }
 		else                                { baseScore =  50; label = Locale.Tr("GOOD");    color = Colors.White;  }
 
-		int points = baseScore * Multiplier;
+		int points = baseScore * Multiplier * BonusMultiplier;
 		Score += points;
 		NotesHit++;
 		GameData.NotesHit++;
@@ -82,7 +88,7 @@ public class ScoreManager
 		UpdateMultiplier();
 		if (Combo > GameData.MaxCombo) GameData.MaxCombo = Combo;
 
-		int points = 150 * Multiplier;
+		int points = 150 * Multiplier * BonusMultiplier;
 		Score += points;
 		GameData.HoldsComplete++;
 		MarkResolved();
@@ -95,8 +101,11 @@ public class ScoreManager
 	/// </summary>
 	public void ProcessMiss()
 	{
-		Combo      = 0;
-		Multiplier = 1;
+		if (!NoFail)
+		{
+			Combo      = 0;
+			Multiplier = 1;
+		}
 		GameData.NotesMissed++;
 		MarkResolved();
 	}

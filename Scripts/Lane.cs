@@ -30,6 +30,7 @@ public partial class Lane : Node3D
 	private Note                _currentHoldNote = null;
 	private bool                _wasHolding;
 	private bool                _wasNoteInWindow;
+	private bool                _isStarPowerActive;
 
 	// ── Touch zones (calculadas a partir da projeção 3D→2D da câmera) ──────
 	// Armazena os limites em pixels da zona de toque desta lane.
@@ -283,21 +284,28 @@ public partial class Lane : Node3D
 			_currentHoldNote.ReleaseHold();
 		_currentHoldNote = null;
 
-		// Restaura emissão padrão (valores de ApplyColor)
-		if (_buttonCapMat != null)
+		// Restaura emissão padrão — se SP ativo, reaplica o glow
+		if (_isStarPowerActive)
 		{
-			_buttonCapMat.Emission = LaneColor * 1.0f;
-			_buttonCapMat.EmissionEnergyMultiplier = 2.0f;
+			SetStarPowerGlow(true);
 		}
-		if (_buttonBaseMat != null)
+		else
 		{
-			_buttonBaseMat.Emission = LaneColor * 0.5f;
-			_buttonBaseMat.EmissionEnergyMultiplier = 1.2f;
-		}
-		if (_hitZoneMat != null)
-		{
-			_hitZoneMat.Emission = LaneColor * 2.5f;
-			_hitZoneMat.EmissionEnergyMultiplier = 3.0f;
+			if (_buttonCapMat != null)
+			{
+				_buttonCapMat.Emission = LaneColor * 1.0f;
+				_buttonCapMat.EmissionEnergyMultiplier = 2.0f;
+			}
+			if (_buttonBaseMat != null)
+			{
+				_buttonBaseMat.Emission = LaneColor * 0.5f;
+				_buttonBaseMat.EmissionEnergyMultiplier = 1.2f;
+			}
+			if (_hitZoneMat != null)
+			{
+				_hitZoneMat.Emission = LaneColor * 2.5f;
+				_hitZoneMat.EmissionEnergyMultiplier = 3.0f;
+			}
 		}
 	}
 
@@ -333,10 +341,15 @@ public partial class Lane : Node3D
 		}
 		else if (_wasHolding || _wasNoteInWindow)
 		{
-			// Restaura valores padrão definidos em ApplyColor
-			if (_hitZoneMat   != null) _hitZoneMat.EmissionEnergyMultiplier   = 3.0f;
-			if (_buttonCapMat != null) _buttonCapMat.EmissionEnergyMultiplier = 2.0f;
-			if (_buttonBaseMat != null) _buttonBaseMat.EmissionEnergyMultiplier = 1.2f;
+			// Restaura valores padrão — respeita SP glow se ativo
+			if (_isStarPowerActive)
+				SetStarPowerGlow(true);
+			else
+			{
+				if (_hitZoneMat   != null) _hitZoneMat.EmissionEnergyMultiplier   = 3.0f;
+				if (_buttonCapMat != null) _buttonCapMat.EmissionEnergyMultiplier = 2.0f;
+				if (_buttonBaseMat != null) _buttonBaseMat.EmissionEnergyMultiplier = 1.2f;
+			}
 		}
 
 		_wasHolding      = isHolding;
@@ -441,6 +454,65 @@ public partial class Lane : Node3D
 
 		_touchBoundsReady = true;
 		GD.Print($"[Lane{LaneIndex}] TouchZone: {_touchLeftBound:F0}–{_touchRightBound:F0}px (tela {viewSize.X:F0}px)");
+	}
+
+	/// <summary>Remove todas as notas ativas desta lane (usado no loop de prática).</summary>
+	public void ClearActiveNotes()
+	{
+		foreach (var n in _activeNotes)
+		{
+			if (IsInstanceValid(n)) n.QueueFree();
+		}
+		_activeNotes.Clear();
+
+		// Libera hold note separadamente caso não esteja em _activeNotes
+		if (_currentHoldNote != null && IsInstanceValid(_currentHoldNote))
+			_currentHoldNote.QueueFree();
+		_currentHoldNote = null;
+		_holdTouchIndex  = -1;
+	}
+
+	/// <summary>Retorna a primeira nota HOPO na janela de acerto, ou null.</summary>
+	public Note GetFirstHOPOInWindow()
+	{
+		Note closest = null;
+		float closestDist = float.MaxValue;
+		for (int i = _activeNotes.Count - 1; i >= 0; i--)
+		{
+			var n = _activeNotes[i];
+			if (!IsInstanceValid(n) || n.WasHit || n.Missed || !n.IsHOPO || n.IsLong || !n.IsInHitWindow()) continue;
+			float d = Mathf.Abs(n.GlobalPosition.Z - Note.HitLineZ);
+			if (d < closestDist) { closestDist = d; closest = n; }
+		}
+		return closest;
+	}
+
+	/// <summary>Ativa/desativa o glow de Star Power na track e botões.</summary>
+	public void SetStarPowerGlow(bool active)
+	{
+		_isStarPowerActive = active;
+		ApplyColor();
+
+		if (active)
+		{
+			Color spColor = new Color(0.4f, 0.7f, 1f);
+			if (_trackMat != null)
+			{
+				_trackMat.EmissionEnabled = true;
+				_trackMat.Emission = spColor * 0.5f;
+				_trackMat.EmissionEnergyMultiplier = 2.0f;
+			}
+			if (_hitZoneMat != null)
+			{
+				_hitZoneMat.Emission = spColor * 3f;
+				_hitZoneMat.EmissionEnergyMultiplier = 5.0f;
+			}
+			if (_buttonCapMat != null)
+			{
+				_buttonCapMat.Emission = spColor * 2f;
+				_buttonCapMat.EmissionEnergyMultiplier = 3.0f;
+			}
+		}
 	}
 
 	private void ShowReleasePenalty()

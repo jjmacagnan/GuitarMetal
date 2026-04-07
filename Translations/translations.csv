@@ -90,3 +90,9 @@ CREDITS_GITHUB_PROJECT,"GitHub (projeto):","GitHub (project):","GitHub (proyecto
 CREDITS_LINKEDIN,LinkedIn:,LinkedIn:,LinkedIn:
 CREDITS_TECH,Tecnologia,Technology,Tecnología
 CREDITS_TECH_TEXT,"Godot 4.6  •  C#  •  .NET 8","Godot 4.6  •  C#  •  .NET 8","Godot 4.6  •  C#  •  .NET 8"
+PRACTICE_MODE,"Modo Prática","Practice Mode","Modo Práctica"
+PRACTICE_SPEED,"Velocidade: {0}%","Speed: {0}%","Velocidad: {0}%"
+EARLY,Adiantado,Early,Temprano
+LATE,Atrasado,Late,Tardío
+STAR_POWER,"Star Power","Star Power","Star Power"
+SP_ACTIVE,"Star Power Ativo!","Star Power Active!","¡Star Power Activo!"

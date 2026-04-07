@@ -97,6 +97,10 @@ public static class ChartImporter
 		var timeMap  = BuildTimeMap(bpmMap, resolution);
 
 		var noteList = new List<NoteData>();
+		var starPowerRanges = new List<(double start, double end)>();
+		var forceHopoTicks  = new HashSet<long>();
+		var forceStrumTicks = new HashSet<long>();
+
 		section = "";
 		foreach (string raw in lines)
 		{
@@ -105,10 +109,31 @@ public static class ChartImporter
 			if (line is "{" or "}") continue;
 
 			if (section == targetTrack)
+			{
 				ParseNoteLine(line, noteList, timeMap, offset);
+				ParseStarPowerLine(line, starPowerRanges, timeMap, offset);
+				ParseForceFlags(line, forceHopoTicks, forceStrumTicks);
+			}
 		}
 
 		noteList.Sort((a, b) => a.Time.CompareTo(b.Time));
+
+		// Marca notas Star Power
+		foreach (var nd in noteList)
+		{
+			foreach (var (spStart, spEnd) in starPowerRanges)
+			{
+				if (nd.Time >= spStart && nd.Time <= spEnd)
+				{
+					nd.IsStarPower = true;
+					break;
+				}
+			}
+		}
+
+		// Marca HOPO por proximidade ou flags forçadas
+		MarkHOPOs(noteList, bpmMap, resolution, forceHopoTicks, forceStrumTicks, timeMap, offset);
+
 		foreach (var nd in noteList) chart.Notes.Add(nd);
 
 		GD.Print($"[ChartImporter] '{chart.SongName}' — {chart.Notes.Count} notas ({targetTrack}), BPM={chart.BPM}");
@@ -175,8 +200,84 @@ public static class ChartImporter
 			Time     = noteTime,
 			Lane     = fret,
 			IsLong   = sustain > 0,
-			Duration = noteDur
+			Duration = noteDur,
+			Tick     = tick,
 		});
+	}
+
+	// ── Star Power parser ──────────────────────────────────────────────────
+
+	private static void ParseStarPowerLine(string line, List<(double start, double end)> ranges,
+		List<TimePoint> timeMap, float offset)
+	{
+		// Formato: tick = S 2 duration
+		int eq = line.IndexOf('=');
+		if (eq < 0) return;
+		if (!long.TryParse(line[..eq].Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out long tick)) return;
+
+		string rest = line[(eq + 1)..].Trim();
+		if (!rest.StartsWith("S 2")) return;
+
+		string[] parts = rest.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+		if (parts.Length < 3) return;
+		if (!long.TryParse(parts[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out long duration)) return;
+
+		double startTime = TicksToSeconds(tick, timeMap) + offset;
+		double endTime   = TicksToSeconds(tick + duration, timeMap) + offset;
+		ranges.Add((startTime, endTime));
+	}
+
+	// ── Force flags parser ────────────────────────────────────────────────
+
+	private static void ParseForceFlags(string line, HashSet<long> forceHopo, HashSet<long> forceStrum)
+	{
+		// N 5 = force HOPO, N 6 = force strum
+		int eq = line.IndexOf('=');
+		if (eq < 0) return;
+		if (!long.TryParse(line[..eq].Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out long tick)) return;
+
+		string rest = line[(eq + 1)..].Trim();
+		if (rest.StartsWith("N 5")) forceHopo.Add(tick);
+		else if (rest.StartsWith("N 6")) forceStrum.Add(tick);
+	}
+
+	// ── HOPO detection ────────────────────────────────────────────────────
+
+	private static void MarkHOPOs(List<NoteData> notes, SortedDictionary<long, float> bpmMap,
+		float resolution, HashSet<long> forceHopo, HashSet<long> forceStrum,
+		List<TimePoint> timeMap, float offset)
+	{
+		if (notes.Count < 2) return;
+
+		// HOPO threshold in ticks: 1/3 of a beat (tempo-independent)
+		long hopoTickThreshold = (long)Math.Round(resolution / 3.0);
+
+		for (int i = 1; i < notes.Count; i++)
+		{
+			var prev = notes[i - 1];
+			var curr = notes[i];
+
+			// Force strum: explicitly NOT a HOPO
+			if (forceStrum.Contains(curr.Tick))
+			{
+				curr.IsHOPO = false;
+				continue;
+			}
+
+			// Force HOPO: explicitly a HOPO
+			if (forceHopo.Contains(curr.Tick))
+			{
+				curr.IsHOPO = true;
+				continue;
+			}
+
+			// Auto-detect: close notes on different lanes are HOPO (tick-based)
+			long tickDelta = curr.Tick - prev.Tick;
+			bool differentLane = curr.Lane != prev.Lane;
+
+			if (tickDelta > 0 && tickDelta <= hopoTickThreshold && differentLane)
+				curr.IsHOPO = true;
+		}
 	}
 
 	// ── Helpers ────────────────────────────────────────────────────────────
