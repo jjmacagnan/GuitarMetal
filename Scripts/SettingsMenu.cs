@@ -31,6 +31,12 @@ public partial class SettingsMenu : Control
 	private Label   _sfxValueLabel;
 	private AudioStreamPlayer _previewSfx;
 
+	// ── Graphics ──────────────────────────────────────────────────────────
+	private VBoxContainer _graphicsVBox;
+	private CheckBox      _fullscreenCheck;
+	private OptionButton  _fpsOption;
+	private static readonly int[] FpsOptions = { 0, 30, 60, 120, 144 };
+
 	// ── Botões de binding por lane ────────────────────────────────────────
 	private readonly Button[] _keyboardButtons = new Button[LaneConfig.LaneCount];
 	private readonly Button[] _gamepadButtons  = new Button[LaneConfig.LaneCount];
@@ -50,6 +56,7 @@ public partial class SettingsMenu : Control
 		_keyboardVBox = GetNodeOrNull<VBoxContainer>("VBox/TabContainer/KeyboardTab/KeyboardVBox");
 		_gamepadVBox  = GetNodeOrNull<VBoxContainer>("VBox/TabContainer/GamepadTab/GamepadVBox");
 		_audioVBox    = GetNodeOrNull<VBoxContainer>("VBox/TabContainer/AudioTab/AudioVBox");
+		_graphicsVBox = GetNodeOrNull<VBoxContainer>("VBox/TabContainer/GraphicsTab/GraphicsVBox");
 		_resetButton  = GetNodeOrNull<Button>("VBox/BottomRow/ResetButton");
 		_savedLabel   = GetNodeOrNull<Label>("VBox/BottomRow/SavedLabel");
 		_backButton   = GetNodeOrNull<Button>("VBox/BackButton");
@@ -57,6 +64,7 @@ public partial class SettingsMenu : Control
 		BuildLaneRows(_keyboardVBox, _keyboardButtons, isKeyboard: true);
 		BuildLaneRows(_gamepadVBox,  _gamepadButtons,  isKeyboard: false);
 		BuildAudioSliders();
+		BuildGraphicsOptions();
 
 		if (_resetButton != null) _resetButton.Pressed += OnResetPressed;
 		if (_backButton  != null) _backButton.Pressed  += OnBackPressed;
@@ -174,6 +182,76 @@ public partial class SettingsMenu : Control
 
 			parent.AddChild(row);
 		}
+	}
+
+	// ── Graphics options ──────────────────────────────────────────────────
+	private void BuildGraphicsOptions()
+	{
+		if (_graphicsVBox == null) return;
+
+		// Fullscreen toggle
+		bool isFullscreen = DisplayServer.WindowGetMode() == DisplayServer.WindowMode.ExclusiveFullscreen
+						  || DisplayServer.WindowGetMode() == DisplayServer.WindowMode.Fullscreen;
+
+		_fullscreenCheck = new CheckBox
+		{
+			Text          = Locale.Tr("FULLSCREEN"),
+			ButtonPressed = isFullscreen,
+			FocusMode     = FocusModeEnum.All,
+		};
+		_fullscreenCheck.AddThemeFontSizeOverride("font_size", 20);
+		_fullscreenCheck.Toggled += OnFullscreenToggled;
+		_graphicsVBox.AddChild(_fullscreenCheck);
+
+		// FPS limit
+		var fpsRow = new HBoxContainer();
+		fpsRow.AddThemeConstantOverride("separation", 16);
+
+		var fpsLabel = new Label
+		{
+			Text              = Locale.Tr("FPS_LIMIT"),
+			CustomMinimumSize = new Vector2(160, 0),
+			VerticalAlignment = VerticalAlignment.Center,
+		};
+		fpsLabel.AddThemeFontSizeOverride("font_size", 20);
+		fpsLabel.AddThemeColorOverride("font_color", new Color(0.8f, 0.8f, 1f));
+		fpsRow.AddChild(fpsLabel);
+
+		_fpsOption = new OptionButton
+		{
+			CustomMinimumSize   = new Vector2(160, 44),
+			FocusMode           = FocusModeEnum.All,
+		};
+		_fpsOption.AddThemeFontSizeOverride("font_size", 18);
+
+		int currentFps = Engine.MaxFps;
+		int selectedIdx = 0;
+		for (int i = 0; i < FpsOptions.Length; i++)
+		{
+			string text = FpsOptions[i] == 0 ? Locale.Tr("FPS_UNLIMITED") : $"{FpsOptions[i]} FPS";
+			_fpsOption.AddItem(text, i);
+			if (FpsOptions[i] == currentFps) selectedIdx = i;
+		}
+		_fpsOption.Selected = selectedIdx;
+		_fpsOption.ItemSelected += OnFpsSelected;
+		fpsRow.AddChild(_fpsOption);
+
+		_graphicsVBox.AddChild(fpsRow);
+	}
+
+	private void OnFullscreenToggled(bool on)
+	{
+		DisplayServer.WindowSetMode(on
+			? DisplayServer.WindowMode.ExclusiveFullscreen
+			: DisplayServer.WindowMode.Windowed);
+		GraphicsSettings.Fullscreen = on;
+	}
+
+	private void OnFpsSelected(long idx)
+	{
+		int fps = FpsOptions[(int)idx];
+		Engine.MaxFps = fps;
+		GraphicsSettings.MaxFps = fps;
 	}
 
 	// ── Audio sliders ─────────────────────────────────────────────────────
@@ -342,6 +420,15 @@ public partial class SettingsMenu : Control
 		UpdateVolumeLabel(_musicValueLabel,  0f);
 		UpdateVolumeLabel(_sfxValueLabel,    0f);
 
+		// Reset graphics
+		GraphicsSettings.Fullscreen = false;
+		GraphicsSettings.MaxFps = 0;
+		GraphicsSettings.Save();
+		DisplayServer.WindowSetMode(DisplayServer.WindowMode.Windowed);
+		Engine.MaxFps = 0;
+		if (_fullscreenCheck != null) _fullscreenCheck.ButtonPressed = false;
+		if (_fpsOption != null) _fpsOption.Selected = 0;
+
 		ShowSavedFeedback();
 	}
 
@@ -353,6 +440,7 @@ public partial class SettingsMenu : Control
 		if (_listeningLane >= 0) CancelListening();
 		KeybindingStorage.Save();
 		AudioSettings.Save();
+		GraphicsSettings.Save();
 		GetTree().ChangeSceneToFile(ScenePaths.MainMenu);
 	}
 
@@ -382,6 +470,7 @@ public partial class SettingsMenu : Control
 			_tabContainer.SetTabTitle(0, Locale.Tr("KEYBOARD_TAB"));
 			_tabContainer.SetTabTitle(1, Locale.Tr("GAMEPAD_TAB"));
 			_tabContainer.SetTabTitle(2, Locale.Tr("AUDIO_TAB"));
+			_tabContainer.SetTabTitle(3, Locale.Tr("GRAPHICS_TAB"));
 		}
 	}
 }
