@@ -59,6 +59,7 @@ public partial class GameManager : Node3D
 
 		SetupInputMap();
 		_audio         = GetNodeOrNull<AudioStreamPlayer>("AudioPlayer");
+		if (_audio != null) _audio.Bus = "Music";
 		_scoreLabel    = GetNodeOrNull<Label>("HUD/ScoreLabel");
 		_comboLabel    = GetNodeOrNull<Label>("HUD/ComboLabel");
 		_multLabel     = GetNodeOrNull<Label>("HUD/MultLabel");
