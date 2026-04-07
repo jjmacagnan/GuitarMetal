@@ -209,7 +209,7 @@ public partial class GameManager : Node3D
 				BuildPracticeTouchButtons(hud);
 
 			// Atualiza hints quando joystick conecta/desconecta
-			Input.JoyConnectionChanged += (device, connected) => UpdatePracticeLabel();
+			Input.JoyConnectionChanged += OnJoyConnectionChanged;
 		}
 
 		// 9. Star Power gauge HUD
@@ -256,6 +256,14 @@ public partial class GameManager : Node3D
 
 		UpdateHUD();
 	}
+
+	public override void _ExitTree()
+	{
+		if (_practice != null)
+			Input.JoyConnectionChanged -= OnJoyConnectionChanged;
+	}
+
+	private void OnJoyConnectionChanged(long device, bool connected) => UpdatePracticeLabel();
 
 	// ── Input Map ──────────────────────────────────────────────────────────
 	private void SetupInputMap()
@@ -424,11 +432,11 @@ public partial class GameManager : Node3D
 
 	private void PerformPracticeLoop()
 	{
-		// Limpa notas ativas das lanes
+		// Limpa notas ativas das lanes para evitar duplicação
 		foreach (var lane in _lanes)
 		{
 			if (lane == null) continue;
-			// As notas serão refeitas pelo SpawnNotes
+			lane.ClearActiveNotes();
 		}
 
 		// Reposiciona o note index para o início do loop

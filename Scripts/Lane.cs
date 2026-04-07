@@ -443,6 +443,17 @@ public partial class Lane : Node3D
 		GD.Print($"[Lane{LaneIndex}] TouchZone: {_touchLeftBound:F0}–{_touchRightBound:F0}px (tela {viewSize.X:F0}px)");
 	}
 
+	/// <summary>Remove todas as notas ativas desta lane (usado no loop de prática).</summary>
+	public void ClearActiveNotes()
+	{
+		foreach (var n in _activeNotes)
+		{
+			if (IsInstanceValid(n)) n.QueueFree();
+		}
+		_activeNotes.Clear();
+		_currentHoldNote = null;
+	}
+
 	/// <summary>Retorna a primeira nota HOPO na janela de acerto, ou null.</summary>
 	public Note GetFirstHOPOInWindow()
 	{

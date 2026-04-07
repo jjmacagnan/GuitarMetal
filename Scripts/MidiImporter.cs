@@ -512,7 +512,7 @@ public static class MidiImporter
 
         // Mark HOPO by proximity
         result.Sort((a, b) => a.Time.CompareTo(b.Time));
-        int initialTempo = tempoMapRaw.Count > 0 ? tempoMapRaw.Values.GetEnumerator().Current : 500000;
+        int initialTempo = 500000;
         if (tempoMapRaw.Count > 0) { var e = tempoMapRaw.GetEnumerator(); e.MoveNext(); initialTempo = e.Current.Value; }
         float bpm = 60_000_000f / initialTempo;
         double hopoThreshold = 60.0 / bpm / 3.0;

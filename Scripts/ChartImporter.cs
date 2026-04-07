@@ -248,6 +248,14 @@ public static class ChartImporter
 	{
 		if (notes.Count < 2) return;
 
+		// Pre-convert force ticks to times for O(1) lookup
+		var forceHopoTimes = new HashSet<double>();
+		var forceStrumTimes = new HashSet<double>();
+		foreach (long tick in forceHopo)
+			forceHopoTimes.Add(Math.Round(TicksToSeconds(tick, timeMap) + offset, 6));
+		foreach (long tick in forceStrum)
+			forceStrumTimes.Add(Math.Round(TicksToSeconds(tick, timeMap) + offset, 6));
+
 		// HOPO threshold: 1/12 of a beat at the current BPM
 		float baseBpm = GetBpmAtTick(0, bpmMap);
 		double hopoThreshold = 60.0 / baseBpm / 3.0; // 1/12 note in seconds
@@ -256,17 +264,28 @@ public static class ChartImporter
 		{
 			var prev = notes[i - 1];
 			var curr = notes[i];
+			double roundedTime = Math.Round(curr.Time, 6);
 
+			// Force strum: explicitly NOT a HOPO
+			if (forceStrumTimes.Contains(roundedTime))
+			{
+				curr.IsHOPO = false;
+				continue;
+			}
+
+			// Force HOPO: explicitly a HOPO
+			if (forceHopoTimes.Contains(roundedTime))
+			{
+				curr.IsHOPO = true;
+				continue;
+			}
+
+			// Auto-detect: close notes on different lanes are HOPO
 			double timeDelta = curr.Time - prev.Time;
 			bool differentLane = curr.Lane != prev.Lane;
 
-			// Auto-detect: close notes on different lanes are HOPO
 			if (timeDelta > 0 && timeDelta <= hopoThreshold && differentLane)
 				curr.IsHOPO = true;
-
-			// Force flags override auto-detection
-			// (We check tick-based flags - approximate by checking if any forced tick maps to this note's time)
-			// Since we don't store ticks on NoteData, use time proximity for force flags
 		}
 	}
 
