@@ -361,17 +361,17 @@ public partial class GameManager : Node3D
 	private void BuildPracticeTouchButtons(CanvasLayer hud)
 	{
 		var vbox = new VBoxContainer();
-		vbox.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.TopRight);
-		vbox.OffsetLeft   = -80;
-		vbox.OffsetRight  = -10;
-		vbox.OffsetTop    =  10;
-		vbox.OffsetBottom = 280;
+		vbox.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.TopLeft);
+		vbox.OffsetLeft   =  16;
+		vbox.OffsetRight  = 250;
+		vbox.OffsetTop    = 165;
+		vbox.OffsetBottom = 435;
 		vbox.AddThemeConstantOverride("separation", 6);
 
-		var btnSpeed = MakePracticeTouchButton("\u23e9", OnPracticeCycleSpeed);   // ⏩
-		var btnStart = MakePracticeTouchButton("[A",     OnPracticeLoopStart);
-		var btnEnd   = MakePracticeTouchButton("B]",     OnPracticeLoopEnd);
-		var btnClear = MakePracticeTouchButton("\u2716",  OnPracticeClearLoop);   // ✖
+		var btnSpeed = MakePracticeTouchButton("SPD",   OnPracticeCycleSpeed);
+		var btnStart = MakePracticeTouchButton("LP-A",  OnPracticeLoopStart);
+		var btnEnd   = MakePracticeTouchButton("LP-B",  OnPracticeLoopEnd);
+		var btnClear = MakePracticeTouchButton("CLR",   OnPracticeClearLoop);
 
 		vbox.AddChild(btnSpeed);
 		vbox.AddChild(btnStart);
