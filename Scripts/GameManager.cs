@@ -53,6 +53,9 @@ public partial class GameManager : Node3D
 	private double         _lastHitTime = -1;
 	private int            _prevCombo;
 	private Label          _milestoneLabel;
+	private Godot.Environment _env;
+	private DirectionalLight3D _dirLight;
+	private float          _bgIntensity;        // 0-1 intensidade alvo
 
 	// ── _Ready ─────────────────────────────────────────────────────────────
 	public override void _Ready()
@@ -69,6 +72,11 @@ public partial class GameManager : Node3D
 		_accuracyLabel = GetNodeOrNull<Label>("HUD/AccuracyLabel");
 		_keyHintsLabel = GetNodeOrNull<Label>("HUD/KeyHints");
 		if (_keyHintsLabel != null) _keyHintsLabel.Text = KeybindingStorage.BuildControlsHint(includePauseHint: true);
+
+		// Environment e luz para background dinâmico
+		var we = GetNodeOrNull<WorldEnvironment>("WorldEnvironment");
+		if (we != null) _env = we.Environment;
+		_dirLight = GetNodeOrNull<DirectionalLight3D>("DirectionalLight3D");
 
 		// Inicializa lanes
 		_lanes = new Lane[LaneConfig.LaneCount];
@@ -369,6 +377,7 @@ public partial class GameManager : Node3D
 		SpawnNotes();
 		CheckHOPOAutoHit();
 		UpdateHUD();
+		UpdateDynamicBackground((float)delta);
 	}
 
 	// ── Practice ───────────────────────────────────────────────────────────
@@ -729,6 +738,47 @@ public partial class GameManager : Node3D
 	{
 		var t = GetTree().CreateTimer(1f);
 		t.Timeout += () => GetTree().ChangeSceneToFile(ScenePaths.Results);
+	}
+
+	// ── Background dinâmico ──────────────────────────────────────────────
+	private void UpdateDynamicBackground(float delta)
+	{
+		// Intensidade alvo baseada no multiplier (1x→0, 2x→0.3, 4x→0.6, 8x→1.0)
+		float target = _scoring.Multiplier switch
+		{
+			>= 8 => 1.0f,
+			>= 4 => 0.6f,
+			>= 2 => 0.3f,
+			_    => 0f
+		};
+
+		// Star Power ativo: boost extra
+		if (_starPower is { IsActive: true })
+			target = Mathf.Max(target, 0.8f);
+
+		// Lerp suave para a intensidade alvo
+		_bgIntensity = Mathf.Lerp(_bgIntensity, target, delta * 3f);
+
+		if (_env != null)
+		{
+			// Glow: intensidade sobe de 0.9 (base) até 2.5
+			_env.GlowIntensity = Mathf.Lerp(0.9f, 2.5f, _bgIntensity);
+			_env.GlowBloom     = Mathf.Lerp(0.25f, 0.6f, _bgIntensity);
+
+			// Cor ambiente: do azul escuro base para cor vibrante
+			Color baseColor  = new Color(0.05f, 0.05f, 0.12f);
+			Color glowColor  = _starPower is { IsActive: true }
+				? new Color(0.1f, 0.2f, 0.5f)   // azul intenso durante Star Power
+				: new Color(0.15f, 0.05f, 0.2f); // roxo suave no combo alto
+			_env.AmbientLightColor = baseColor.Lerp(glowColor, _bgIntensity);
+			_env.AmbientLightEnergy = Mathf.Lerp(0.6f, 1.2f, _bgIntensity);
+		}
+
+		if (_dirLight != null)
+		{
+			// Luz mais forte e quente conforme performance
+			_dirLight.LightEnergy = Mathf.Lerp(0.8f, 1.4f, _bgIntensity);
+		}
 	}
 
 	// ── Combo milestones ──────────────────────────────────────────────────
