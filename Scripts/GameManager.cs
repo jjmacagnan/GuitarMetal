@@ -51,6 +51,8 @@ public partial class GameManager : Node3D
 	private Label          _songTimeLabel;
 	private int            _lastHitLane = -1;
 	private double         _lastHitTime = -1;
+	private int            _prevCombo;
+	private Label          _milestoneLabel;
 
 	// ── _Ready ─────────────────────────────────────────────────────────────
 	public override void _Ready()
@@ -279,6 +281,24 @@ public partial class GameManager : Node3D
 			progressContainer.AddChild(_songTimeLabel);
 
 			hud.AddChild(progressContainer);
+		}
+
+		// 11. Milestone label (combo celebrations)
+		if (hud != null)
+		{
+			_milestoneLabel = new Label
+			{
+				HorizontalAlignment = HorizontalAlignment.Center,
+				VerticalAlignment   = VerticalAlignment.Center,
+				Modulate            = new Color(1, 1, 1, 0),
+			};
+			_milestoneLabel.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.Center);
+			_milestoneLabel.OffsetLeft   = -200;
+			_milestoneLabel.OffsetRight  =  200;
+			_milestoneLabel.OffsetTop    = -200;
+			_milestoneLabel.OffsetBottom = -140;
+			_milestoneLabel.AddThemeFontSizeOverride("font_size", 48);
+			hud.AddChild(_milestoneLabel);
 		}
 
 		// Registra input action para Star Power
@@ -616,6 +636,7 @@ public partial class GameManager : Node3D
 		}
 
 		ShowFeedback(label, color);
+		if (wasHit) CheckComboMilestone();
 
 		// Timing feedback (practice mode)
 		if (_practice != null && wasHit && _timingLabel != null)
@@ -654,6 +675,7 @@ public partial class GameManager : Node3D
 
 		_particles.StopHoldFire(lane);
 		ShowFeedback(Locale.Tr("HOLD"), new Color(0.8f, 0.4f, 1f));
+		CheckComboMilestone();
 		_particles.SpawnHitEffect(lane);
 		CheckSongEnd();
 	}
@@ -663,6 +685,7 @@ public partial class GameManager : Node3D
 		if (_songEnded) return;
 
 		_scoring.ProcessMiss();
+		_prevCombo = 0;
 
 		_particles.StopHoldFire(lane);
 		ShowFeedback(Locale.Tr("MISS"), Colors.Red);
@@ -706,6 +729,61 @@ public partial class GameManager : Node3D
 	{
 		var t = GetTree().CreateTimer(1f);
 		t.Timeout += () => GetTree().ChangeSceneToFile(ScenePaths.Results);
+	}
+
+	// ── Combo milestones ──────────────────────────────────────────────────
+	private static readonly int[] Milestones = { 200, 100, 50, 30, 20, 10 };
+
+	private void CheckComboMilestone()
+	{
+		int combo = _scoring.Combo;
+		foreach (int m in Milestones)
+		{
+			if (combo >= m && _prevCombo < m)
+			{
+				ShowMilestone(m);
+				PulseComboLabel();
+				break;
+			}
+		}
+		_prevCombo = combo;
+	}
+
+	private void ShowMilestone(int combo)
+	{
+		if (_milestoneLabel == null) return;
+
+		_milestoneLabel.Text = $"{combo}x COMBO!";
+
+		// Cor baseada no milestone
+		Color c = combo >= 100 ? new Color(1f, 0.2f, 0.2f)   // vermelho
+				: combo >=  50 ? new Color(1f, 0.5f, 0f)      // laranja
+				: combo >=  30 ? new Color(1f, 0.85f, 0f)     // amarelo
+				:                new Color(0.2f, 1f, 0.4f);    // verde
+
+		_milestoneLabel.AddThemeColorOverride("font_color", c);
+		_milestoneLabel.Modulate = Colors.White;
+		_milestoneLabel.Scale = Vector2.One * 0.5f;
+		_milestoneLabel.PivotOffset = _milestoneLabel.Size / 2f;
+
+		var tw = CreateTween();
+		tw.SetParallel(true);
+		tw.TweenProperty(_milestoneLabel, "scale", Vector2.One * 1.2f, 0.25f)
+		  .SetTrans(Tween.TransitionType.Back).SetEase(Tween.EaseType.Out);
+		tw.TweenProperty(_milestoneLabel, "modulate:a", 0f, 0.6f).SetDelay(0.8f);
+		tw.SetParallel(false);
+		tw.TweenProperty(_milestoneLabel, "scale", Vector2.One, 0.15f);
+	}
+
+	private void PulseComboLabel()
+	{
+		if (_comboLabel == null) return;
+		_comboLabel.PivotOffset = _comboLabel.Size / 2f;
+		var tw = CreateTween();
+		tw.TweenProperty(_comboLabel, "scale", Vector2.One * 1.4f, 0.12f)
+		  .SetTrans(Tween.TransitionType.Back).SetEase(Tween.EaseType.Out);
+		tw.TweenProperty(_comboLabel, "scale", Vector2.One, 0.2f)
+		  .SetTrans(Tween.TransitionType.Bounce).SetEase(Tween.EaseType.Out);
 	}
 
 	// ── UI ─────────────────────────────────────────────────────────────────
