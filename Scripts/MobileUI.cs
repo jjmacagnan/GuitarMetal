@@ -32,9 +32,6 @@ public partial class MobileUI : Node
 
 	public override void _Ready()
 	{
-		// Inicializa buses e volumes de áudio salvos
-		AudioSettings.Initialize();
-
 		string os = OS.GetName();
 		bool isMobile = os == "Android" || os == "iOS";
 		if (!isMobile) return;
