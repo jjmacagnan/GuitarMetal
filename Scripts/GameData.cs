@@ -53,6 +53,11 @@ public static class GameData
 	/// <summary>Se true, a partida roda em modo prática (no-fail, speed control, timing feedback).</summary>
 	public static bool IsPracticeMode { get; set; } = false;
 
+	// ── Modificadores de dificuldade ─────────────────────────────────────
+	public static bool  ModMirror    { get; set; } = false;
+	public static bool  ModNoFail    { get; set; } = false;
+	public static float ModSpeedMult { get; set; } = 1.0f;  // 0.75, 1.0, 1.25
+
 	// ── Dificuldade ──────────────────────────────────────────────────────
 	/// <summary>Track selecionada (ex: "ExpertSingle"). null = auto (maior disponível).</summary>
 	public static string       SelectedDifficulty    { get; set; } = null;
@@ -110,5 +115,8 @@ public static class GameData
 		SelectedDifficulty    = null;
 		AvailableDifficulties = null;
 		IsPracticeMode        = false;
+		ModMirror             = false;
+		ModNoFail             = false;
+		ModSpeedMult          = 1.0f;
 	}
 }

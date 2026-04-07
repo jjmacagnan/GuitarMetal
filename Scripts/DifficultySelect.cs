@@ -80,8 +80,80 @@ public partial class DifficultySelect : Control
 			return;
 		}
 
+		// Modificadores
+		BuildModifiers();
+
 		// Foca a primeira dificuldade disponível
 		firstBtn.CallDeferred(Control.MethodName.GrabFocus);
+	}
+
+	private OptionButton _speedOption;
+
+	private void BuildModifiers()
+	{
+		var box = GetNodeOrNull<HBoxContainer>("VBox/ModifiersBox");
+		if (box == null) return;
+
+		// Mirror
+		var mirrorCheck = new CheckBox
+		{
+			Text          = Locale.Tr("MOD_MIRROR"),
+			ButtonPressed = GameData.ModMirror,
+			FocusMode     = FocusModeEnum.All,
+		};
+		mirrorCheck.AddThemeFontSizeOverride("font_size", 16);
+		mirrorCheck.Toggled += (on) => GameData.ModMirror = on;
+		box.AddChild(mirrorCheck);
+
+		// No Fail
+		var noFailCheck = new CheckBox
+		{
+			Text          = Locale.Tr("MOD_NO_FAIL"),
+			ButtonPressed = GameData.ModNoFail,
+			FocusMode     = FocusModeEnum.All,
+		};
+		noFailCheck.AddThemeFontSizeOverride("font_size", 16);
+		noFailCheck.Toggled += (on) => GameData.ModNoFail = on;
+		box.AddChild(noFailCheck);
+
+		// Speed
+		var speedBox = new HBoxContainer();
+		speedBox.AddThemeConstantOverride("separation", 8);
+
+		var speedLabel = new Label { Text = Locale.Tr("MOD_SPEED"), VerticalAlignment = VerticalAlignment.Center };
+		speedLabel.AddThemeFontSizeOverride("font_size", 16);
+		speedLabel.AddThemeColorOverride("font_color", new Color(0.8f, 0.8f, 1f));
+		speedBox.AddChild(speedLabel);
+
+		_speedOption = new OptionButton
+		{
+			CustomMinimumSize = new Vector2(110, 36),
+			FocusMode         = FocusModeEnum.All,
+		};
+		_speedOption.AddThemeFontSizeOverride("font_size", 16);
+		_speedOption.AddItem("75%",  0);
+		_speedOption.AddItem("100%", 1);
+		_speedOption.AddItem("125%", 2);
+		_speedOption.Selected = GameData.ModSpeedMult switch
+		{
+			0.75f => 0,
+			1.25f => 2,
+			_     => 1
+		};
+		_speedOption.ItemSelected += OnSpeedSelected;
+		speedBox.AddChild(_speedOption);
+
+		box.AddChild(speedBox);
+	}
+
+	private void OnSpeedSelected(long idx)
+	{
+		GameData.ModSpeedMult = idx switch
+		{
+			0 => 0.75f,
+			2 => 1.25f,
+			_ => 1.0f
+		};
 	}
 
 	public override void _UnhandledInput(InputEvent @event)
@@ -97,6 +169,9 @@ public partial class DifficultySelect : Control
 	private void OnDifficultySelected(string difficulty)
 	{
 		GameData.SelectedDifficulty = difficulty;
+		// Aplica speed modifier ao NoteSpeed
+		if (GameData.ModSpeedMult != 1.0f)
+			GameData.SetNoteSpeedForRun(GameData.DefaultNoteSpeed * GameData.ModSpeedMult);
 		GetTree().ChangeSceneToFile(ScenePaths.Loading);
 	}
 

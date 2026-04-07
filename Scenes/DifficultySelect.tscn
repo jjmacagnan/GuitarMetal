@@ -49,6 +49,11 @@ theme_override_constants/h_separation = 24
 theme_override_constants/v_separation = 24
 columns = 2
 
+[node name="ModifiersBox" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_constants/separation = 32
+
 [node name="BackButton" type="Button" parent="VBox"]
 layout_mode = 2
 custom_minimum_size = Vector2(0, 48)

@@ -146,6 +146,10 @@ public partial class GameManager : Node3D
 			GD.Print("[GameManager] Modo Prática ativo.");
 		}
 
+		// Modificadores de dificuldade
+		if (GameData.ModNoFail) _scoring.NoFail = true;
+		if (GameData.ModMirror) ApplyMirrorModifier();
+
 		_clock = new SongTimeClock(TravelTime, AudioLatencyOffset);
 		GameData.SongTime = _clock.SongTime;
 
@@ -568,6 +572,15 @@ public partial class GameManager : Node3D
 	}
 
 	// ── Spawn ──────────────────────────────────────────────────────────────
+	private void ApplyMirrorModifier()
+	{
+		if (_noteList == null) return;
+		int maxLane = LaneConfig.LaneCount - 1;
+		foreach (var note in _noteList)
+			note.Lane = maxLane - note.Lane;
+		GD.Print("[GameManager] Mirror modifier aplicado.");
+	}
+
 	private void SpawnNotes()
 	{
 		while (_nextNoteIndex < _noteList.Count)
