@@ -47,6 +47,8 @@ public partial class GameManager : Node3D
 	private double         _songDuration;
 	private ProgressBar    _spGauge;
 	private Label          _spLabel;
+	private ProgressBar    _songProgress;
+	private Label          _songTimeLabel;
 	private int            _lastHitLane = -1;
 	private double         _lastHitTime = -1;
 
@@ -57,6 +59,7 @@ public partial class GameManager : Node3D
 
 		SetupInputMap();
 		_audio         = GetNodeOrNull<AudioStreamPlayer>("AudioPlayer");
+		if (_audio != null) _audio.Bus = "Music";
 		_scoreLabel    = GetNodeOrNull<Label>("HUD/ScoreLabel");
 		_comboLabel    = GetNodeOrNull<Label>("HUD/ComboLabel");
 		_multLabel     = GetNodeOrNull<Label>("HUD/MultLabel");
@@ -244,6 +247,40 @@ public partial class GameManager : Node3D
 			hud.AddChild(spContainer);
 		}
 
+		// 10. Song progress bar
+		if (hud != null)
+		{
+			var progressContainer = new HBoxContainer();
+			progressContainer.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.BottomWide);
+			progressContainer.OffsetLeft   =  16;
+			progressContainer.OffsetRight  = -16;
+			progressContainer.OffsetTop    = -64;
+			progressContainer.OffsetBottom = -44;
+			progressContainer.AddThemeConstantOverride("separation", 8);
+
+			_songProgress = new ProgressBar
+			{
+				CustomMinimumSize = new Vector2(0, 12),
+				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+				MinValue = 0,
+				MaxValue = 100,
+				Value = 0,
+				ShowPercentage = false,
+			};
+			progressContainer.AddChild(_songProgress);
+
+			_songTimeLabel = new Label
+			{
+				Text = "0:00 / 0:00",
+				VerticalAlignment = VerticalAlignment.Center,
+			};
+			_songTimeLabel.AddThemeFontSizeOverride("font_size", 12);
+			_songTimeLabel.AddThemeColorOverride("font_color", new Color(0.8f, 0.8f, 0.8f));
+			progressContainer.AddChild(_songTimeLabel);
+
+			hud.AddChild(progressContainer);
+		}
+
 		// Registra input action para Star Power
 		const string spAction = "star_power";
 		if (!InputMap.HasAction(spAction))
@@ -297,7 +334,14 @@ public partial class GameManager : Node3D
 	// ── _Process ───────────────────────────────────────────────────────────
 	public override void _Process(double delta)
 	{
-		if (_songEnded || (_pause != null && _pause.IsPaused)) return;
+		if (_pause != null && _pause.IsPaused) return;
+
+		// Após fim da música, apenas atualiza HUD (progress bar) até a transição
+		if (_songEnded)
+		{
+			UpdateHUD();
+			return;
+		}
 
 		float speed = _practice?.SpeedMultiplier ?? 1f;
 		_clock.Update(delta * speed, _audio, AudioLatencyOffset);
@@ -711,6 +755,21 @@ public partial class GameManager : Node3D
 					_starPower.IsActive ? Colors.White :
 					_starPower.CanActivate() ? Colors.Yellow :
 					new Color(0.4f, 0.8f, 1f));
+			}
+		}
+
+		// Song progress
+		if (_songProgress != null && _songDuration > 0)
+		{
+			double t = Mathf.Clamp(_clock.SongTime, 0, _songDuration);
+			_songProgress.Value = t / _songDuration * 100.0;
+			if (_songTimeLabel != null)
+			{
+				int curMin = (int)(t / 60);
+				int curSec = (int)(t % 60);
+				int totMin = (int)(_songDuration / 60);
+				int totSec = (int)(_songDuration % 60);
+				_songTimeLabel.Text = $"{curMin}:{curSec:D2} / {totMin}:{totSec:D2}";
 			}
 		}
 

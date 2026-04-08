@@ -127,7 +127,7 @@ public partial class Lane : Node3D
 		else { _hitZoneMat = _hitZoneMesh.MaterialOverride as StandardMaterial3D; }
 
 		// 5. SFX de miss (tecla sem nota)
-		_missSfx = new AudioStreamPlayer { Name = "MissSfx" };
+		_missSfx = new AudioStreamPlayer { Name = "MissSfx", Bus = "SFX" };
 		var sfxStream = GD.Load<AudioStream>("res://SFX/Caixa 1.mp3");
 		if (sfxStream != null)
 		{

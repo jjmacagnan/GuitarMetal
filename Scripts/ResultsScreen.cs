@@ -15,6 +15,9 @@ public partial class ResultsScreen : Control
         SetLabel("VBox/ScoreLabel",    Locale.Tr("SCORE_FMT", $"{GameData.Score:N0}"));
         SetLabel("VBox/AccLabel",      Locale.Tr("ACCURACY_FMT", $"{GameData.Accuracy:F1}"));
         SetLabel("VBox/HitLabel",      Locale.Tr("HITS_FMT", GameData.NotesHit, GameData.TotalNotes));
+        SetLabel("VBox/PerfectLabel",  Locale.Tr("PERFECT_FMT", GameData.PerfectCount));
+        SetLabel("VBox/GreatLabel",    Locale.Tr("GREAT_FMT", GameData.GreatCount));
+        SetLabel("VBox/GoodLabel",     Locale.Tr("GOOD_FMT", GameData.GoodCount));
         SetLabel("VBox/MissLabel",     Locale.Tr("MISSES_FMT", GameData.NotesMissed));
         SetLabel("VBox/HoldsLabel",    Locale.Tr("HOLDS_FMT", GameData.HoldsComplete));
         // FIX M6: Exibe o maior combo alcançado. O nó MaxComboLabel deve existir na cena.

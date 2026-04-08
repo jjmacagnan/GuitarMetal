@@ -10,6 +10,9 @@ public class ScoreManager
 	public int Combo          { get; private set; }
 	public int Multiplier     { get; private set; } = 1;
 	public int NotesHit       { get; private set; }
+	public int PerfectCount   { get; private set; }
+	public int GreatCount     { get; private set; }
+	public int GoodCount      { get; private set; }
 	public int ResolvedNotes  { get; private set; }
 	public int TotalNotes     { get; }
 	public bool AllResolved   => ResolvedNotes >= TotalNotes;
@@ -63,9 +66,9 @@ public class ScoreManager
 		string label;
 		Color  color;
 
-		if      (dist <= perfectThreshold) { baseScore = 100; label = Locale.Tr("PERFECT"); color = Colors.Cyan;   }
-		else if (dist <= greatThreshold)   { baseScore =  75; label = Locale.Tr("GREAT");   color = Colors.Yellow; }
-		else                                { baseScore =  50; label = Locale.Tr("GOOD");    color = Colors.White;  }
+		if      (dist <= perfectThreshold) { baseScore = 100; label = Locale.Tr("PERFECT"); color = Colors.Cyan;   PerfectCount++; GameData.PerfectCount++; }
+		else if (dist <= greatThreshold)   { baseScore =  75; label = Locale.Tr("GREAT");   color = Colors.Yellow; GreatCount++;   GameData.GreatCount++;   }
+		else                                { baseScore =  50; label = Locale.Tr("GOOD");    color = Colors.White;  GoodCount++;    GameData.GoodCount++;    }
 
 		int points = baseScore * Multiplier * BonusMultiplier;
 		Score += points;

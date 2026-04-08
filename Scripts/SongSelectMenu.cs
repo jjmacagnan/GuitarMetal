@@ -45,7 +45,7 @@ public partial class SongSelectMenu : Control
 
         if (_backButton != null) _backButton.Pressed += () => GetTree().ChangeSceneToFile(ScenePaths.MainMenu);
 
-        _previewPlayer = new AudioStreamPlayer { VolumeDb = -8f };
+        _previewPlayer = new AudioStreamPlayer { VolumeDb = -8f, Bus = "Music" };
         AddChild(_previewPlayer);
 
         _missSfxCheck = GetNodeOrNull<CheckBox>("VBox/MissSfxCheck");
