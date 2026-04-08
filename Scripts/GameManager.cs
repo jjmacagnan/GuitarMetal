@@ -326,7 +326,14 @@ public partial class GameManager : Node3D
 	// ── _Process ───────────────────────────────────────────────────────────
 	public override void _Process(double delta)
 	{
-		if (_songEnded || (_pause != null && _pause.IsPaused)) return;
+		if (_pause != null && _pause.IsPaused) return;
+
+		// Após fim da música, apenas atualiza HUD (progress bar) até a transição
+		if (_songEnded)
+		{
+			UpdateHUD();
+			return;
+		}
 
 		float speed = _practice?.SpeedMultiplier ?? 1f;
 		_clock.Update(delta * speed, _audio, AudioLatencyOffset);
